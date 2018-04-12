@@ -42,14 +42,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import io.nyris.camera.AspectRatio;
-import io.nyris.camera.CameraView;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Set;
+
+import io.nyris.camera.AspectRatio;
+import io.nyris.camera.CameraView;
 
 
 /**

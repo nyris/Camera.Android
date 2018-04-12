@@ -16,14 +16,10 @@
 
 package io.nyris.camera;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
 import org.junit.Test;
 
-import io.nyris.camera.AspectRatio;
-import io.nyris.camera.Size;
-import io.nyris.camera.SizeMap;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 public class SizeMapTest {
 

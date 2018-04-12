@@ -42,6 +42,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
 
+import io.nyris.camera.test.R;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.registerIdlingResources;
 import static android.support.test.espresso.Espresso.unregisterIdlingResources;
@@ -54,7 +56,6 @@ import static io.nyris.camera.CameraViewActions.setAspectRatio;
 import static io.nyris.camera.CameraViewMatchers.hasAspectRatio;
 import static junit.framework.Assert.assertFalse;
 import static org.hamcrest.CoreMatchers.is;
-import io.nyris.camera.test.R;
 
 @RunWith(AndroidJUnit4.class)
 public class CameraViewTest {

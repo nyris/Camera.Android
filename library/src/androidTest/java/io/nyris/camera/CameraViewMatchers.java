@@ -23,9 +23,6 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
-import io.nyris.camera.AspectRatio;
-import io.nyris.camera.CameraView;
-
 class CameraViewMatchers {
 
     static Matcher<View> hasAspectRatio(@NonNull final AspectRatio ratio) {

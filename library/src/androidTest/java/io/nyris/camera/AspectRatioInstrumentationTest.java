@@ -16,19 +16,16 @@
 
 package io.nyris.camera;
 
-import static junit.framework.Assert.assertNotNull;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.sameInstance;
-import static org.hamcrest.core.Is.is;
-
 import android.os.Parcel;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.nyris.camera.AspectRatio;
+import static junit.framework.Assert.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.hamcrest.core.Is.is;
 
 
 @RunWith(AndroidJUnit4.class)

@@ -15,7 +15,6 @@
  */
 
 package io.nyris.camera;
-
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
 import android.view.Surface;
@@ -23,14 +22,13 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-
 class SurfaceViewPreview extends PreviewImpl {
 
     final SurfaceView mSurfaceView;
 
     SurfaceViewPreview(Context context, ViewGroup parent) {
         final View view = View.inflate(context, R.layout.surface_view, parent);
-        mSurfaceView = (SurfaceView) view.findViewById(R.id.surface_view);
+        mSurfaceView = view.findViewById(R.id.surface_view);
         final SurfaceHolder holder = mSurfaceView.getHolder();
         //noinspection deprecation
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -82,5 +80,4 @@ class SurfaceViewPreview extends PreviewImpl {
     boolean isReady() {
         return getWidth() != 0 && getHeight() != 0;
     }
-
 }

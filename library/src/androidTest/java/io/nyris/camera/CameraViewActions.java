@@ -16,8 +16,6 @@
 
 package io.nyris.camera;
 
-import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
-
 import android.support.annotation.NonNull;
 import android.support.test.espresso.UiController;
 import android.support.test.espresso.ViewAction;
@@ -25,8 +23,7 @@ import android.view.View;
 
 import org.hamcrest.Matcher;
 
-import io.nyris.camera.AspectRatio;
-import io.nyris.camera.CameraView;
+import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 
 class CameraViewActions {
 

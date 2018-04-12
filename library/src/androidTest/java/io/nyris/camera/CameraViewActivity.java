@@ -18,6 +18,7 @@ package io.nyris.camera;
 
 import android.app.Activity;
 import android.os.Bundle;
+
 import io.nyris.camera.test.R;
 
 public class CameraViewActivity extends Activity {

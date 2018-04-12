@@ -29,10 +29,10 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import io.nyris.camera.AspectRatio;
-
 import java.util.Arrays;
 import java.util.Set;
+
+import io.nyris.camera.AspectRatio;
 
 
 /**
