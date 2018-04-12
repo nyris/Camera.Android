@@ -11,7 +11,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<manifest package="com.google.android.cameraview.demo"
+<manifest package="io.nyris.camera.demo"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission

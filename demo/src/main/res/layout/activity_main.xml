@@ -21,7 +21,7 @@
     android:background="@color/primary"
     tools:context=".MainActivity">
 
-    <com.google.android.cameraview.CameraView
+    <io.nyris.camera.CameraView
         android:id="@+id/camera"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

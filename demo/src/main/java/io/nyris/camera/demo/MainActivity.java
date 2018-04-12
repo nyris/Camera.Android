@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.cameraview.demo;
+package io.nyris.camera.demo;
 
 import android.Manifest;
 import android.app.Dialog;
@@ -42,8 +42,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.google.android.cameraview.AspectRatio;
-import com.google.android.cameraview.CameraView;
+import io.nyris.camera.AspectRatio;
+import io.nyris.camera.CameraView;
 
 import java.io.File;
 import java.io.FileOutputStream;

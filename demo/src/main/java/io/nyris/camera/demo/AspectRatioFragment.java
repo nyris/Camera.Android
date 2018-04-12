@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.cameraview.demo;
+package io.nyris.camera.demo;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -29,7 +29,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.google.android.cameraview.AspectRatio;
+import io.nyris.camera.AspectRatio;
 
 import java.util.Arrays;
 import java.util.Set;
