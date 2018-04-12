@@ -13,41 +13,119 @@
 // limitations under the License.
 
 apply plugin: 'com.android.library'
+apply plugin: 'com.getkeepsafe.dexcount'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+apply from: 'git-version.gradle'
+apply from: 'maven-publish.gradle'
+
+def getDefaultPublishConfig = { ->
+    def publishConfig = System.getenv("SDK_DEFAULT_PUBLISH_CONFIG")
+    if(publishConfig== null || publishConfig.isEmpty())
+        publishConfig = "prodRelease"
+    return publishConfig
+}
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode gitVersionCode
+        versionName gitVersionName
         testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
     }
+
     buildTypes {
+        debug {
+            buildConfigField "String", "GIT_COMMIT_HASH", "\""+gitCommitHash+"\""
+            buildConfigField "String", "SDK_VERSION", "\""+gitVersionName+"\""
+        }
         release {
-            minifyEnabled false
+            minifyEnabled true
+            buildConfigField "String", "GIT_COMMIT_HASH", "\""+gitCommitHash+"\""
+            buildConfigField "String", "SDK_VERSION", "\""+gitVersionName+"\""
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    sourceSets {
-        main.java.srcDirs += 'src/main/base'
-        main.java.srcDirs += 'src/main/api9'
-        main.java.srcDirs += 'src/main/api14'
-        main.java.srcDirs += 'src/main/api21'
-        main.java.srcDirs += 'src/main/api23'
+
+    flavorDimensions 'environment'
+    productFlavors {
+        dev{
+            dimension 'environment'
+        }
+        prod{
+            dimension 'environment'
+        }
     }
+
+    sourceSets {
+        main.java.srcDirs += 'src/dev/java/barcode'
+        main.java.srcDirs += 'src/dev/java/barcode/api14'
+        main.java.srcDirs += 'src/dev/java/barcode/api21'
+        main.java.srcDirs += 'src/dev/java/barcode/api23'
+        main.java.srcDirs += 'src/dev/java/ai/api14'
+        main.java.srcDirs += 'src/dev/java/ai/api21'
+        main.java.srcDirs += 'src/dev/java/ai/api23'
+
+        main.java.srcDirs += 'src/main/java/base'
+        main.java.srcDirs += 'src/main/java/api9'
+        main.java.srcDirs += 'src/main/java/api14'
+        main.java.srcDirs += 'src/main/java/api21'
+        main.java.srcDirs += 'src/main/java/api23'
+        main.java.srcDirs += 'src/main/java/barcode'
+        main.java.srcDirs += 'src/main/java/barcode/api14'
+        main.java.srcDirs += 'src/main/java/barcode/api21'
+        main.java.srcDirs += 'src/main/java/barcode/api23'
+        main.java.srcDirs += 'src/main/java/ai/api14'
+        main.java.srcDirs += 'src/main/java/ai/api21'
+        main.java.srcDirs += 'src/main/java/ai/api23'
+
+        main.java.srcDirs += 'src/prod/java/barcode'
+        main.java.srcDirs += 'src/prod/java/barcode/api14'
+        main.java.srcDirs += 'src/prod/java/barcode/api21'
+        main.java.srcDirs += 'src/prod/java/barcode/api23'
+        main.java.srcDirs += 'src/prod/java/ai/api14'
+        main.java.srcDirs += 'src/prod/java/ai/api21'
+        main.java.srcDirs += 'src/prod/java/ai/api23'
+    }
+
+    flavorDimensions 'environment'
+    productFlavors {
+        dev{
+            dimension 'environment'
+        }
+        prod{
+            dimension 'environment'
+        }
+    }
+
+    defaultPublishConfig getDefaultPublishConfig()
+    publishNonDefault true
 }
 
 dependencies {
-    compile "com.android.support:support-annotations:$supportLibraryVersion"
-    compile "com.android.support:support-v4:$supportLibraryVersion"
-
     // Tests
-    testCompile 'junit:junit:4.12'
-    androidTestCompile('com.android.support.test:runner:0.5') {
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation ('com.android.support.test:runner:1.0.1') {
         exclude module: 'support-annotations'
     }
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2') {
+    androidTestImplementation ('com.android.support.test.espresso:espresso-core:3.0.1') {
         exclude module: 'support-annotations'
     }
+
+    //Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+
+    //Support
+    implementation "com.android.support:support-annotations:$supportLibraryVersion"
+    implementation "com.android.support:support-v4:$supportLibraryVersion"
 }
