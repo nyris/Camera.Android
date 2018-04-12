@@ -16,6 +16,7 @@
 
 package io.nyris.camera;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -81,6 +82,16 @@ public class CameraView extends FrameLayout {
 
     private final DisplayOrientationDetector mDisplayOrientationDetector;
 
+    private boolean isScreenShot;
+
+    private boolean isCanNotTakeScreenShot;
+
+    private boolean isSaveImage;
+
+    private int takenPictureWidth = 512;
+
+    private int takenPictureHeight = 512;
+
     public CameraView(Context context) {
         this(context, null);
     }
@@ -120,7 +131,12 @@ public class CameraView extends FrameLayout {
         }
         setAutoFocus(a.getBoolean(R.styleable.CameraView_autoFocus, true));
         setFlash(a.getInt(R.styleable.CameraView_flash, Constants.FLASH_AUTO));
+
+        setSaveImage(a.getBoolean(R.styleable.CameraView_saveImage, false));
+        setTakenPictureWidth(a.getInt(R.styleable.CameraView_imageWidth, 512));
+        setTakenPictureHeight(a.getInt(R.styleable.CameraView_imageHeight, 512));
         a.recycle();
+
         // Display orientation detector
         mDisplayOrientationDetector = new DisplayOrientationDetector(context) {
             @Override
@@ -187,6 +203,7 @@ public class CameraView extends FrameLayout {
         super.onDetachedFromWindow();
     }
 
+    @SuppressLint("DrawAllocation")
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (isInEditMode()){
@@ -234,17 +251,18 @@ public class CameraView extends FrameLayout {
             ratio = ratio.inverse();
         }
         assert ratio != null;
+
+        Size size;
         if (height < width * ratio.getY() / ratio.getX()) {
-            mImpl.getView().measure(
-                    MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-                    MeasureSpec.makeMeasureSpec(width * ratio.getY() / ratio.getX(),
-                            MeasureSpec.EXACTLY));
+            size = new Size(width, width * ratio.getY() / ratio.getX());
         } else {
-            mImpl.getView().measure(
-                    MeasureSpec.makeMeasureSpec(height * ratio.getX() / ratio.getY(),
-                            MeasureSpec.EXACTLY),
-                    MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
+            size = new Size(height * ratio.getX() / ratio.getY(), height);
         }
+
+        mImpl.getView().measure(
+                MeasureSpec.makeMeasureSpec(size.getWidth(), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(size.getHeight(),
+                        MeasureSpec.EXACTLY));
     }
 
     @Override
@@ -352,6 +370,31 @@ public class CameraView extends FrameLayout {
         mImpl.setFacing(facing);
     }
 
+
+    /**
+     * Set save image to true to save image
+     * @param saveImage the boolean value
+     */
+    public void setSaveImage(boolean saveImage) {
+        isSaveImage = saveImage;
+    }
+
+    /**
+     * Set taken picture width
+     * @param takenPictureWidth the width value
+     */
+    public void setTakenPictureWidth(int takenPictureWidth) {
+        this.takenPictureWidth = takenPictureWidth;
+    }
+
+    /**
+     * Set taken picture height
+     * @param takenPictureHeight the height value
+     */
+    public void setTakenPictureHeight(int takenPictureHeight) {
+        this.takenPictureHeight = takenPictureHeight;
+    }
+
     /**
      * Gets the direction that the current camera faces.
      *
@@ -361,6 +404,30 @@ public class CameraView extends FrameLayout {
     public int getFacing() {
         //noinspection WrongConstant
         return mImpl.getFacing();
+    }
+
+    /**
+     * Get is saving image
+     * @return The saving image value
+     */
+    public boolean isSaveImage() {
+        return isSaveImage;
+    }
+
+    /**
+     * Get taken picture width
+     * @return The width of the taken picture
+     */
+    public float getTakenPictureWidth() {
+        return takenPictureWidth;
+    }
+
+    /**
+     * Get taken picture height
+     * @return The height of the taken picture
+     */
+    public float getTakenPictureHeight() {
+        return takenPictureHeight;
     }
 
     /**
@@ -437,13 +504,28 @@ public class CameraView extends FrameLayout {
      * {@link Callback#onPictureTaken(CameraView, byte[])}.
      */
     public void takePicture() {
-        mImpl.takePicture();
+        isScreenShot = false;
+        Bitmap bitmap = mImpl.getPreviewBitmap(getWidth(), getHeight());
+        if(isCanNotTakeScreenShot)
+            mImpl.takePicture();
+
+        if(bitmap ==null)
+            mImpl.takePicture();
+        else {
+            Bitmap emptyBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
+            if (bitmap.sameAs(emptyBitmap)) {
+                mImpl.takePicture();
+                isCanNotTakeScreenShot = true;
+            }
+            else {
+                isScreenShot = true;
+                mCallbacks.onPictureTaken(bitmap);
+            }
+        }
     }
 
     private class CallbackBridge implements CameraViewImpl.Callback {
-
         private final ArrayList<Callback> mCallbacks = new ArrayList<>();
-
         private boolean mRequestLayoutOnOpen;
 
         CallbackBridge() {
@@ -476,29 +558,42 @@ public class CameraView extends FrameLayout {
         }
 
         @Override
-        public void onPictureTaken(byte[] data) {
+        public void onPictureTaken(byte[] image) {
+            if(!isScreenShot){
+                image = ImageHelper.Companion.rotateBitmap(image);
+                image = ImageHelper.Companion.resize(getContext(), image,getWidth(),getHeight());
+            }
+
+            if(isSaveImage){
+                new SavedImageTask(getContext(), image).execute();
+            }
+
+            byte[] transformedData = ImageHelper.Companion.resize(getContext(), image, takenPictureWidth, takenPictureHeight);
             for (Callback callback : mCallbacks) {
-                callback.onPictureTaken(CameraView.this, data);
+                callback.onPictureTakenOriginal(CameraView.this, image);
+                callback.onPictureTaken(CameraView.this, transformedData);
             }
         }
 
         @Override
         public void onPictureTaken(Bitmap bitmap) {
-
+            byte[] data = ImageHelper.Companion.compressAndTransformToBytes(bitmap);
+            onPictureTaken(data);
         }
 
         @Override
         public void onError(String errorMessage) {
-
+            for (Callback callback : mCallbacks) {
+                callback.onError(errorMessage);
+            }
         }
 
-        public void reserveRequestLayoutOnOpen() {
+        void reserveRequestLayoutOnOpen() {
             mRequestLayoutOnOpen = true;
         }
     }
 
     protected static class SavedState extends BaseSavedState {
-
         @Facing
         int facing;
 
@@ -510,7 +605,7 @@ public class CameraView extends FrameLayout {
         int flash;
 
         @SuppressWarnings("WrongConstant")
-        public SavedState(Parcel source, ClassLoader loader) {
+        SavedState(Parcel source, ClassLoader loader) {
             super(source);
             facing = source.readInt();
             ratio = source.readParcelable(loader);
@@ -518,7 +613,7 @@ public class CameraView extends FrameLayout {
             flash = source.readInt();
         }
 
-        public SavedState(Parcelable superState) {
+        SavedState(Parcelable superState) {
             super(superState);
         }
 
@@ -531,7 +626,7 @@ public class CameraView extends FrameLayout {
             out.writeInt(flash);
         }
 
-        public static final Parcelable.Creator<SavedState> CREATOR
+        static final Parcelable.Creator<SavedState> CREATOR
                 = ParcelableCompat.newCreator(new ParcelableCompatCreatorCallbacks<SavedState>() {
 
             @Override
@@ -547,37 +642,4 @@ public class CameraView extends FrameLayout {
         });
 
     }
-
-    /**
-     * Callback for monitoring events about {@link CameraView}.
-     */
-    @SuppressWarnings("UnusedParameters")
-    public abstract static class Callback {
-
-        /**
-         * Called when camera is opened.
-         *
-         * @param cameraView The associated {@link CameraView}.
-         */
-        public void onCameraOpened(CameraView cameraView) {
-        }
-
-        /**
-         * Called when camera is closed.
-         *
-         * @param cameraView The associated {@link CameraView}.
-         */
-        public void onCameraClosed(CameraView cameraView) {
-        }
-
-        /**
-         * Called when a picture is taken.
-         *
-         * @param cameraView The associated {@link CameraView}.
-         * @param data       JPEG data.
-         */
-        public void onPictureTaken(CameraView cameraView, byte[] data) {
-        }
-    }
-
 }

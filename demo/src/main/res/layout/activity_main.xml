@@ -24,12 +24,14 @@
     <io.nyris.camera.CameraView
         android:id="@+id/camera"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
+        android:layout_height="match_parent"
         android:adjustViewBounds="true"
-        android:background="@android:color/black"/>
+        android:background="@android:color/black"
+        app:autoFocus="true"
+        app:saveImage="true"
+        app:imageWidth="512"
+        app:imageHeight="512"
+        app:recognition="barcode"/>
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
