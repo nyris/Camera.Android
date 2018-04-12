@@ -19,6 +19,7 @@ package io.nyris.camera;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -29,6 +30,8 @@ import android.support.v4.os.ParcelableCompat;
 import android.support.v4.os.ParcelableCompatCreatorCallbacks;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.FrameLayout;
 
 import java.lang.annotation.Retention;
@@ -125,6 +128,36 @@ public class CameraView extends FrameLayout {
                 mImpl.setDisplayOrientation(displayOrientation);
             }
         };
+        updateFocusMarkerView(preview);
+    }
+
+    void updateFocusMarkerView(final PreviewImpl preview){
+        View view = findViewById(R.id.focusMarker);
+        if(view != null)
+            removeView(view);
+        final FocusMarkerLayout focusMarkerLayout = new FocusMarkerLayout(getContext());
+        focusMarkerLayout.setId(R.id.focusMarker);
+        addView(focusMarkerLayout);
+        focusMarkerLayout.setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent motionEvent) {
+                int action = motionEvent.getAction();
+                if (action == MotionEvent.ACTION_UP) {
+                    if(focusMarkerTouchListener!= null){
+                        focusMarkerTouchListener.onTouched(focusMarkerLayout);
+                    }
+                    focusMarkerLayout.focus(motionEvent.getX(), motionEvent.getY());
+                }
+
+                //preview.getView().dispatchTouchEvent(motionEvent);
+                return true;
+            }
+        });
+    }
+
+    FocusMarkerTouchListener focusMarkerTouchListener;
+    public void setFocusMarkerTouchListener(FocusMarkerTouchListener focusMarkerTouchListener) {
+        this.focusMarkerTouchListener = focusMarkerTouchListener;
     }
 
     @NonNull
@@ -447,6 +480,16 @@ public class CameraView extends FrameLayout {
             for (Callback callback : mCallbacks) {
                 callback.onPictureTaken(CameraView.this, data);
             }
+        }
+
+        @Override
+        public void onPictureTaken(Bitmap bitmap) {
+
+        }
+
+        @Override
+        public void onError(String errorMessage) {
+
         }
 
         public void reserveRequestLayoutOnOpen() {

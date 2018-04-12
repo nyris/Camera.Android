@@ -16,24 +16,30 @@
 
 package io.nyris.camera;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.ImageFormat;
+import android.graphics.Rect;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.SparseIntArray;
+import android.view.MotionEvent;
 import android.view.Surface;
+import android.view.View;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -128,7 +134,7 @@ class Camera2 extends CameraViewImpl {
 
     };
 
-    PictureCaptureCallback mCaptureCallback = new PictureCaptureCallback() {
+    private PictureCaptureCallback mCaptureCallback = new PictureCaptureCallback() {
 
         @Override
         public void onPrecaptureRequired() {
@@ -152,33 +158,28 @@ class Camera2 extends CameraViewImpl {
     };
 
     private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
-            = new ImageReader.OnImageAvailableListener() {
-
-        @Override
-        public void onImageAvailable(ImageReader reader) {
-            try (Image image = reader.acquireNextImage()) {
-                Image.Plane[] planes = image.getPlanes();
-                if (planes.length > 0) {
-                    ByteBuffer buffer = planes[0].getBuffer();
-                    byte[] data = new byte[buffer.remaining()];
-                    buffer.get(data);
-                    mCallback.onPictureTaken(data);
+            = reader -> {
+                try (Image image = reader.acquireNextImage()) {
+                    Image.Plane[] planes = image.getPlanes();
+                    if (planes.length > 0) {
+                        ByteBuffer buffer = planes[0].getBuffer();
+                        byte[] data = new byte[buffer.remaining()];
+                        buffer.get(data);
+                        mCallback.onPictureTaken(data);
+                    }
                 }
-            }
-        }
-
-    };
+            };
 
 
     private String mCameraId;
 
     private CameraCharacteristics mCameraCharacteristics;
 
-    CameraDevice mCamera;
+    private CameraDevice mCamera;
 
-    CameraCaptureSession mCaptureSession;
+    private CameraCaptureSession mCaptureSession;
 
-    CaptureRequest.Builder mPreviewRequestBuilder;
+    private CaptureRequest.Builder mPreviewRequestBuilder;
 
     private ImageReader mImageReader;
 
@@ -199,12 +200,7 @@ class Camera2 extends CameraViewImpl {
     Camera2(Callback callback, PreviewImpl preview, Context context) {
         super(callback, preview);
         mCameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
-        mPreview.setCallback(new PreviewImpl.Callback() {
-            @Override
-            public void onSurfaceChanged() {
-                startCaptureSession();
-            }
-        });
+        mPreview.setCallback(this::startCaptureSession);
     }
 
     @Override
@@ -232,6 +228,12 @@ class Camera2 extends CameraViewImpl {
             mImageReader.close();
             mImageReader = null;
         }
+    }
+
+    @Override
+    void stopPreview() {
+        if(mCaptureSession!= null)
+            mCaptureSession.close();
     }
 
     @Override
@@ -269,7 +271,6 @@ class Camera2 extends CameraViewImpl {
             return false;
         }
         mAspectRatio = ratio;
-        prepareImageReader();
         if (mCaptureSession != null) {
             mCaptureSession.close();
             mCaptureSession = null;
@@ -357,7 +358,7 @@ class Camera2 extends CameraViewImpl {
             int internalFacing = INTERNAL_FACINGS.get(mFacing);
             final String[] ids = mCameraManager.getCameraIdList();
             if (ids.length == 0) { // No camera
-                throw new RuntimeException("No camera available.");
+                mCallback.onError("No camera available.");
             }
             for (String id : ids) {
                 CameraCharacteristics characteristics = mCameraManager.getCameraCharacteristics(id);
@@ -369,7 +370,7 @@ class Camera2 extends CameraViewImpl {
                 }
                 Integer internal = characteristics.get(CameraCharacteristics.LENS_FACING);
                 if (internal == null) {
-                    throw new NullPointerException("Unexpected state: LENS_FACING null");
+                    mCallback.onError("Unexpected state: LENS_FACING null");
                 }
                 if (internal == internalFacing) {
                     mCameraId = id;
@@ -388,7 +389,7 @@ class Camera2 extends CameraViewImpl {
             }
             Integer internal = mCameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
             if (internal == null) {
-                throw new NullPointerException("Unexpected state: LENS_FACING null");
+                mCallback.onError("Unexpected state: LENS_FACING null");
             }
             for (int i = 0, count = INTERNAL_FACINGS.size(); i < count; i++) {
                 if (INTERNAL_FACINGS.valueAt(i) == internal) {
@@ -414,7 +415,7 @@ class Camera2 extends CameraViewImpl {
         StreamConfigurationMap map = mCameraCharacteristics.get(
                 CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         if (map == null) {
-            throw new IllegalStateException("Failed to get configuration map: " + mCameraId);
+            mCallback.onError("Failed to get configuration map: " + mCameraId);
         }
         mPreviewSizes.clear();
         for (android.util.Size size : map.getOutputSizes(mPreview.getOutputClass())) {
@@ -447,8 +448,8 @@ class Camera2 extends CameraViewImpl {
         if (mImageReader != null) {
             mImageReader.close();
         }
-        Size largest = mPictureSizes.sizes(mAspectRatio).last();
-        mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
+        Size frameSize = chooseOptimalSize();
+        mImageReader = ImageReader.newInstance(frameSize.getWidth(), frameSize.getHeight(),
                 ImageFormat.JPEG, /* maxImages */ 2);
         mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, null);
     }
@@ -461,7 +462,7 @@ class Camera2 extends CameraViewImpl {
         try {
             mCameraManager.openCamera(mCameraId, mCameraDeviceCallback, null);
         } catch (CameraAccessException e) {
-            throw new RuntimeException("Failed to open camera: " + mCameraId, e);
+            mCallback.onError("Failed to open camera: " + mCameraId);
         }
     }
 
@@ -470,11 +471,11 @@ class Camera2 extends CameraViewImpl {
      * <p>This rewrites {@link #mPreviewRequestBuilder}.</p>
      * <p>The result will be continuously processed in {@link #mSessionCallback}.</p>
      */
-    void startCaptureSession() {
+    private void startCaptureSession() {
         if (!isCameraOpened() || !mPreview.isReady() || mImageReader == null) {
             return;
         }
-        Size previewSize = chooseOptimalSize();
+        Size previewSize = mPictureSizes.sizes(mAspectRatio).last();
         mPreview.setBufferSize(previewSize.getWidth(), previewSize.getHeight());
         Surface surface = mPreview.getSurface();
         try {
@@ -483,7 +484,7 @@ class Camera2 extends CameraViewImpl {
             mCamera.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
                     mSessionCallback, null);
         } catch (CameraAccessException e) {
-            throw new RuntimeException("Failed to start camera session");
+            mCallback.onError("Failed to start camera session");
         }
     }
 
@@ -518,21 +519,24 @@ class Camera2 extends CameraViewImpl {
     /**
      * Updates the internal state of auto-focus to {@link #mAutoFocus}.
      */
-    void updateAutoFocus() {
+    private void updateAutoFocus() {
         if (mAutoFocus) {
             int[] modes = mCameraCharacteristics.get(
                     CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
             // Auto focus is not supported
             if (modes == null || modes.length == 0 ||
                     (modes.length == 1 && modes[0] == CameraCharacteristics.CONTROL_AF_MODE_OFF)) {
+                detachFocusTapListener();
                 mAutoFocus = false;
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                         CaptureRequest.CONTROL_AF_MODE_OFF);
             } else {
+                attachFocusTapListener();
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
             }
         } else {
+            detachFocusTapListener();
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_OFF);
         }
@@ -541,7 +545,7 @@ class Camera2 extends CameraViewImpl {
     /**
      * Updates the internal state of flash to {@link #mFlash}.
      */
-    void updateFlash() {
+    private void updateFlash() {
         switch (mFlash) {
             case Constants.FLASH_OFF:
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
@@ -580,6 +584,12 @@ class Camera2 extends CameraViewImpl {
      * Locks the focus as the first step for a still image capture.
      */
     private void lockFocus() {
+        if(mPreviewRequestBuilder == null)
+            return;
+        if(mCaptureCallback == null)
+            return;
+        if(mCaptureSession == null)
+            return;
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                 CaptureRequest.CONTROL_AF_TRIGGER_START);
         try {
@@ -593,7 +603,7 @@ class Camera2 extends CameraViewImpl {
     /**
      * Captures a still picture.
      */
-    void captureStillPicture() {
+    private void captureStillPicture() {
         try {
             CaptureRequest.Builder captureRequestBuilder = mCamera.createCaptureRequest(
                     CameraDevice.TEMPLATE_STILL_CAPTURE);
@@ -640,8 +650,8 @@ class Camera2 extends CameraViewImpl {
                     new CameraCaptureSession.CaptureCallback() {
                         @Override
                         public void onCaptureCompleted(@NonNull CameraCaptureSession session,
-                                @NonNull CaptureRequest request,
-                                @NonNull TotalCaptureResult result) {
+                                                       @NonNull CaptureRequest request,
+                                                       @NonNull TotalCaptureResult result) {
                             unlockFocus();
                         }
                     }, null);
@@ -654,7 +664,9 @@ class Camera2 extends CameraViewImpl {
      * Unlocks the auto-focus and restart camera preview. This is supposed to be called after
      * capturing a still picture.
      */
-    void unlockFocus() {
+    private void unlockFocus() {
+        if(mPreviewRequestBuilder == null || mCaptureSession == null || mCaptureCallback == null)
+            return;
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                 CaptureRequest.CONTROL_AF_TRIGGER_CANCEL);
         try {
@@ -668,6 +680,63 @@ class Camera2 extends CameraViewImpl {
             mCaptureCallback.setState(PictureCaptureCallback.STATE_PREVIEW);
         } catch (CameraAccessException e) {
             Log.e(TAG, "Failed to restart camera preview.", e);
+        }
+    }
+
+
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void attachFocusTapListener() {
+        mPreview.getView().setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                if (mCamera != null) {
+                    Rect rect = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+                    if (rect == null) return true;
+                    int areaSize = getFocusAreaSize();
+                    int right = rect.right;
+                    int bottom = rect.bottom;
+                    int viewWidth = mPreview.getView().getWidth();
+                    int viewHeight = mPreview.getView().getHeight();
+                    int ll, rr;
+                    Rect newRect;
+                    int centerX = (int) event.getX();
+                    int centerY = (int) event.getY();
+                    ll = ((centerX * right) - areaSize) / viewWidth;
+                    rr = ((centerY * bottom) - areaSize) / viewHeight;
+                    int focusLeft = clamp(ll, 0, right);
+                    int focusBottom = clamp(rr, 0, bottom);
+                    newRect = new Rect(focusLeft, focusBottom, focusLeft + areaSize, focusBottom + areaSize);
+                    MeteringRectangle meteringRectangle = new MeteringRectangle(newRect, getFocusMeteringAreaWeight());
+                    MeteringRectangle[] meteringRectangleArr = {meteringRectangle};
+
+                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, meteringRectangleArr);
+                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, meteringRectangleArr);
+                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
+                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
+                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, CameraMetadata.CONTROL_AE_PRECAPTURE_TRIGGER_START);
+
+                    updatePreview();
+                }
+            }
+            return true;
+        });
+    }
+
+    private int clamp(int x, int min, int max) {
+        if (x < min) {
+            return min;
+        } else if (x > max) {
+            return max;
+        } else {
+            return x;
+        }
+    }
+
+    private void updatePreview() {
+        try {
+            mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), mCaptureCallback, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
         }
     }
 
@@ -695,13 +764,13 @@ class Camera2 extends CameraViewImpl {
 
         @Override
         public void onCaptureProgressed(@NonNull CameraCaptureSession session,
-                @NonNull CaptureRequest request, @NonNull CaptureResult partialResult) {
+                                        @NonNull CaptureRequest request, @NonNull CaptureResult partialResult) {
             process(partialResult);
         }
 
         @Override
         public void onCaptureCompleted(@NonNull CameraCaptureSession session,
-                @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+                                       @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
             process(result);
         }
 
