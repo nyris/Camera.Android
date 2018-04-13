@@ -1,5 +1,7 @@
 package io.nyris.camera
 
+import java.io.Serializable
+
 /**
  *
  *
@@ -7,6 +9,8 @@ package io.nyris.camera
  * Created by nyris GmbH
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
-interface IBarcodeListener {
-    fun onBarcode(barcode: Barcode)
+
+class Barcode : Serializable {
+    var contents: String? = null
+    var format: BarcodeFormat? = null
 }

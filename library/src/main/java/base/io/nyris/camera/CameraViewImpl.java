@@ -98,16 +98,10 @@ abstract class CameraViewImpl {
 
     abstract void setDisplayOrientation(int displayOrientation);
 
-    void setBarcodesDetectorListner(IBarcodeListener barcodeListener){
-
+    void addBarcodeListener(IBarcodeListener barcodeListener){
     }
 
-    void setBarcode(boolean isEnabled){
-
-    }
-
-    boolean isBarcode(){
-        return false;
+    void enableBarcode(boolean isEnabled){
     }
 
     Bitmap getPreviewBitmap(int cameraWidth, int cameraHeight) {

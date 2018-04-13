@@ -84,7 +84,7 @@ public class CameraView extends FrameLayout {
 
     private boolean isScreenShot;
 
-    private boolean isCanNotTakeScreenShot;
+    private boolean isTakeScreenshot;
 
     private boolean isSaveImage;
 
@@ -108,19 +108,22 @@ public class CameraView extends FrameLayout {
             mDisplayOrientationDetector = null;
             return;
         }
+        // Attributes
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CameraView, defStyleAttr,
+                R.style.Widget_CameraView);
+        int typeRecognition = a.getInt(R.styleable.CameraView_recognition,0);
+
         // Internal setup
         final PreviewImpl preview = createPreviewImpl(context);
         mCallbacks = new CallbackBridge();
         if (Build.VERSION.SDK_INT < 21) {
-            mImpl = new Camera1(mCallbacks, preview);
+            mImpl = cameraBelow21(typeRecognition, preview, context);
         } else if (Build.VERSION.SDK_INT < 23) {
-            mImpl = new Camera2(mCallbacks, preview, context);
+            mImpl = cameraAbove21Low23(typeRecognition, preview, context);
         } else {
-            mImpl = new Camera2Api23(mCallbacks, preview, context);
+            mImpl = cameraAbove23(typeRecognition, preview, context);
         }
-        // Attributes
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CameraView, defStyleAttr,
-                R.style.Widget_CameraView);
+
         mAdjustViewBounds = a.getBoolean(R.styleable.CameraView_android_adjustViewBounds, false);
         setFacing(a.getInt(R.styleable.CameraView_facing, FACING_BACK));
         String aspectRatio = a.getString(R.styleable.CameraView_aspectRatio);
@@ -147,6 +150,7 @@ public class CameraView extends FrameLayout {
         updateFocusMarkerView(preview);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     void updateFocusMarkerView(final PreviewImpl preview){
         View view = findViewById(R.id.focusMarker);
         if(view != null)
@@ -154,26 +158,30 @@ public class CameraView extends FrameLayout {
         final FocusMarkerLayout focusMarkerLayout = new FocusMarkerLayout(getContext());
         focusMarkerLayout.setId(R.id.focusMarker);
         addView(focusMarkerLayout);
-        focusMarkerLayout.setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent motionEvent) {
-                int action = motionEvent.getAction();
-                if (action == MotionEvent.ACTION_UP) {
-                    if(focusMarkerTouchListener!= null){
-                        focusMarkerTouchListener.onTouched(focusMarkerLayout);
-                    }
-                    focusMarkerLayout.focus(motionEvent.getX(), motionEvent.getY());
+        focusMarkerLayout.setOnTouchListener((v, motionEvent) -> {
+            int action = motionEvent.getAction();
+            if (action == MotionEvent.ACTION_UP) {
+                if(focusMarkerTouchListener!= null){
+                    focusMarkerTouchListener.onTouched(focusMarkerLayout);
                 }
-
-                //preview.getView().dispatchTouchEvent(motionEvent);
-                return true;
+                focusMarkerLayout.focus(motionEvent.getX(), motionEvent.getY());
             }
+
+            //preview.getView().dispatchTouchEvent(motionEvent);
+            return true;
         });
     }
 
     FocusMarkerTouchListener focusMarkerTouchListener;
     public void setFocusMarkerTouchListener(FocusMarkerTouchListener focusMarkerTouchListener) {
         this.focusMarkerTouchListener = focusMarkerTouchListener;
+    }
+
+    @NonNull
+    private PreviewImpl createPreviewImpl(Context context, boolean isFallback) {
+        if(isFallback)
+            return new SurfaceViewPreview(context, this);
+        else return createPreviewImpl(context);
     }
 
     @NonNull
@@ -185,6 +193,39 @@ public class CameraView extends FrameLayout {
             preview = new TextureViewPreview(context, this);
         }
         return preview;
+    }
+
+    private CameraViewImpl cameraBelow21(int type, PreviewImpl preview, Context context){
+        switch (type){
+            case 0 : //none
+                return new Camera1(mCallbacks, preview);
+            case 1 : //barcode
+                return new Camera1ZBar(mCallbacks, preview);
+            default:
+                return new Camera1(mCallbacks, preview);
+        }
+    }
+
+    private CameraViewImpl cameraAbove21Low23(int type, PreviewImpl preview, Context context){
+        switch (type){
+            case 0 : //none
+                return new Camera2(mCallbacks, preview, context);
+            case 1 : //barcode
+                return new Camera1ZBar(mCallbacks, preview);
+            default:
+                return new Camera2(mCallbacks, preview, context);
+        }
+    }
+
+    private CameraViewImpl cameraAbove23(int type, PreviewImpl preview, Context context){
+        switch (type){
+            case 0 : //none
+                return new Camera2Api23(mCallbacks, preview, context);
+            case 1 : //barcode
+                return new Camera1ZBar(mCallbacks, preview);
+            default:
+                return new Camera2Api23(mCallbacks, preview, context);
+        }
     }
 
     @Override
@@ -294,13 +335,20 @@ public class CameraView extends FrameLayout {
      * {@link Activity#onResume()}.
      */
     public void start() {
-        if (!mImpl.start()) {
-            //store the state ,and restore this state after fall back o Camera1
-            Parcelable state=onSaveInstanceState();
-            // Camera2 uses legacy hardware layer; fall back to Camera1
-            mImpl = new Camera1(mCallbacks, createPreviewImpl(getContext()));
-            onRestoreInstanceState(state);
-            mImpl.start();
+        isTakeScreenshot = false;
+        try {
+            if (!mImpl.start()) {
+                //store the state ,and restore this state after fall back o Camera1
+                Parcelable state=onSaveInstanceState();
+                // Camera2 uses legacy hardware layer; fall back to Camera1
+                PreviewImpl preview = createPreviewImpl(getContext(), true);
+                mImpl = new Camera1(mCallbacks, preview);
+                onRestoreInstanceState(state);
+                mImpl.start();
+            }
+        }
+        catch (Exception e){
+            mCallbacks.onError(e.getMessage());
         }
     }
 
@@ -470,6 +518,22 @@ public class CameraView extends FrameLayout {
     }
 
     /**
+     * Enable Barcode recognition
+     */
+    public void enableBarcode(boolean isEnabled) {
+        if(!(mImpl instanceof IBarcodeView)){
+            final PreviewImpl preview = createPreviewImpl(getContext(), isEnabled);
+            CameraViewImpl cameraViewImpl = new Camera1ZBar(mCallbacks, preview);
+            cameraViewImpl.setFlash(mImpl.getFlash());
+            cameraViewImpl.setAutoFocus(mImpl.getAutoFocus());
+            cameraViewImpl.setAspectRatio(mImpl.getAspectRatio());
+            cameraViewImpl.setFacing(mImpl.getFacing());
+            mImpl = cameraViewImpl;
+        }
+        mImpl.enableBarcode(isEnabled);
+    }
+
+    /**
      * Returns whether the continuous auto-focus mode is enabled.
      *
      * @return {@code true} if the continuous auto-focus mode is enabled. {@code false} if it is
@@ -506,7 +570,7 @@ public class CameraView extends FrameLayout {
     public void takePicture() {
         isScreenShot = false;
         Bitmap bitmap = mImpl.getPreviewBitmap(getWidth(), getHeight());
-        if(isCanNotTakeScreenShot)
+        if(isTakeScreenshot)
             mImpl.takePicture();
 
         if(bitmap ==null)
@@ -515,7 +579,7 @@ public class CameraView extends FrameLayout {
             Bitmap emptyBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
             if (bitmap.sameAs(emptyBitmap)) {
                 mImpl.takePicture();
-                isCanNotTakeScreenShot = true;
+                isTakeScreenshot = true;
             }
             else {
                 isScreenShot = true;
@@ -535,7 +599,7 @@ public class CameraView extends FrameLayout {
             mCallbacks.add(callback);
         }
 
-        public void remove(Callback callback) {
+        void remove(Callback callback) {
             mCallbacks.remove(callback);
         }
 
@@ -565,7 +629,7 @@ public class CameraView extends FrameLayout {
             }
 
             if(isSaveImage){
-                new SavedImageTask(getContext(), image).execute();
+                new ImageSavingTask(getContext(), image).execute();
             }
 
             byte[] transformedData = ImageHelper.Companion.resize(getContext(), image, takenPictureWidth, takenPictureHeight);
@@ -640,6 +704,5 @@ public class CameraView extends FrameLayout {
             }
 
         });
-
     }
 }

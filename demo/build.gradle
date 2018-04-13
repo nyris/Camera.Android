@@ -60,4 +60,5 @@ dependencies {
 
     implementation "com.android.support:design:$supportLibraryVersion"
     implementation project(':library')
+    implementation project(':zbar-jni')
 }

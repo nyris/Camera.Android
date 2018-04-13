@@ -5,7 +5,7 @@ group='io.nyris'
 version = gitVersionName
 
 //TODO: to be removed when bintray fix the issue https://github.com/bintray/gradle-bintray-plugin/issues/199
-project.archivesBaseName = "sdk"
+project.archivesBaseName = "camera"
 
 install {
     repositories.mavenInstaller {
