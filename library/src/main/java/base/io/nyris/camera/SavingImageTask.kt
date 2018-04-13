@@ -14,7 +14,7 @@ import java.io.FileOutputStream
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
 internal class ImageSavingTask(context : Context, var mImage: ByteArray) : AsyncTask<Void, Void, Void>() {
-    private var mSavedImageUri: Uri? = ImageHelper.Companion.getPhotoFileUri(context, "photo.jpg")
+    private var mSavedImageUri: Uri? = ImageUtils.Companion.getPhotoFileUri(context, "photo.jpg")
 
     override fun doInBackground(vararg voids: Void): Void? {
         try {

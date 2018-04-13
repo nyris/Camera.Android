@@ -18,6 +18,7 @@ package io.nyris.camera;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
@@ -58,17 +59,6 @@ class Camera2 extends CameraViewImpl {
         INTERNAL_FACINGS.put(Constants.FACING_BACK, CameraCharacteristics.LENS_FACING_BACK);
         INTERNAL_FACINGS.put(Constants.FACING_FRONT, CameraCharacteristics.LENS_FACING_FRONT);
     }
-
-    /**
-     * Max preview width that is guaranteed by Camera2 API
-     */
-    private static final int MAX_PREVIEW_WIDTH = 1920;
-
-    /**
-     * Max preview height that is guaranteed by Camera2 API
-     */
-    private static final int MAX_PREVIEW_HEIGHT = 1080;
-
     private final CameraManager mCameraManager;
 
     private final CameraDevice.StateCallback mCameraDeviceCallback
@@ -159,6 +149,7 @@ class Camera2 extends CameraViewImpl {
 
     private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
             = reader -> {
+
                 try (Image image = reader.acquireNextImage()) {
                     Image.Plane[] planes = image.getPlanes();
                     if (planes.length > 0) {
@@ -170,32 +161,33 @@ class Camera2 extends CameraViewImpl {
                 }
             };
 
-
     private String mCameraId;
 
     private CameraCharacteristics mCameraCharacteristics;
 
-    private CameraDevice mCamera;
+    protected CameraDevice mCamera;
 
-    private CameraCaptureSession mCaptureSession;
+    protected CameraCaptureSession mCaptureSession;
 
-    private CaptureRequest.Builder mPreviewRequestBuilder;
+    protected CaptureRequest.Builder mPreviewRequestBuilder;
 
-    private ImageReader mImageReader;
+    protected ImageReader mImageReader;
 
-    private final SizeMap mPreviewSizes = new SizeMap();
+    protected final SizeMap mPreviewSizes = new SizeMap();
 
-    private final SizeMap mPictureSizes = new SizeMap();
+    protected final SizeMap mPictureSizes = new SizeMap();
 
     private int mFacing;
 
-    private AspectRatio mAspectRatio = Constants.DEFAULT_ASPECT_RATIO;
+    protected AspectRatio mAspectRatio = Constants.DEFAULT_ASPECT_RATIO;
 
     private boolean mAutoFocus;
 
     private int mFlash;
 
     private int mDisplayOrientation;
+
+    protected float sensorOrientation = 0;
 
     Camera2(Callback callback, PreviewImpl preview, Context context) {
         super(callback, preview);
@@ -416,7 +408,9 @@ class Camera2 extends CameraViewImpl {
                 CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         if (map == null) {
             mCallback.onError("Failed to get configuration map: " + mCameraId);
+            return;
         }
+        sensorOrientation = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
         mPreviewSizes.clear();
         for (android.util.Size size : map.getOutputSizes(mPreview.getOutputClass())) {
             int width = size.getWidth();
@@ -444,7 +438,7 @@ class Camera2 extends CameraViewImpl {
         }
     }
 
-    private void prepareImageReader() {
+    protected void prepareImageReader() {
         if (mImageReader != null) {
             mImageReader.close();
         }
@@ -471,7 +465,7 @@ class Camera2 extends CameraViewImpl {
      * <p>This rewrites {@link #mPreviewRequestBuilder}.</p>
      * <p>The result will be continuously processed in {@link #mSessionCallback}.</p>
      */
-    private void startCaptureSession() {
+    protected void startCaptureSession() {
         if (!isCameraOpened() || !mPreview.isReady() || mImageReader == null) {
             return;
         }
@@ -486,6 +480,38 @@ class Camera2 extends CameraViewImpl {
         } catch (CameraAccessException e) {
             mCallback.onError("Failed to start camera session");
         }
+        sensorOrientation = getCorrectCameraOrientation(false,sensorOrientation);
+    }
+
+    private float getCorrectCameraOrientation(boolean isFacing, float sensorOrientation) {
+        Activity activity = ((Activity)getView().getContext());
+        if(activity == null)
+            return sensorOrientation;
+
+        int rotation = ((Activity)getView().getContext()).getWindowManager().getDefaultDisplay().getRotation();
+        int degrees = 0;
+        switch(rotation){
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
+        }
+        float result;
+        if(isFacing){
+            result = (sensorOrientation + degrees) % 360;
+            result = (360 - result) % 360;
+        }else{
+            result = (sensorOrientation - degrees + 360) % 360;
+        }
+        return result;
     }
 
     /**
@@ -493,7 +519,7 @@ class Camera2 extends CameraViewImpl {
      *
      * @return The picked size for camera preview.
      */
-    private Size chooseOptimalSize() {
+    protected Size chooseOptimalSize() {
         int surfaceLonger, surfaceShorter;
         final int surfaceWidth = mPreview.getWidth();
         final int surfaceHeight = mPreview.getHeight();
@@ -519,7 +545,7 @@ class Camera2 extends CameraViewImpl {
     /**
      * Updates the internal state of auto-focus to {@link #mAutoFocus}.
      */
-    private void updateAutoFocus() {
+    protected void updateAutoFocus() {
         if (mAutoFocus) {
             int[] modes = mCameraCharacteristics.get(
                     CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
@@ -545,7 +571,7 @@ class Camera2 extends CameraViewImpl {
     /**
      * Updates the internal state of flash to {@link #mFlash}.
      */
-    private void updateFlash() {
+    protected void updateFlash() {
         switch (mFlash) {
             case Constants.FLASH_OFF:
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,

@@ -211,7 +211,7 @@ public class CameraView extends FrameLayout {
             case 0 : //none
                 return new Camera2(mCallbacks, preview, context);
             case 1 : //barcode
-                return new Camera1ZBar(mCallbacks, preview);
+                return new Camera2ZBar(mCallbacks, preview, context);
             default:
                 return new Camera2(mCallbacks, preview, context);
         }
@@ -222,7 +222,7 @@ public class CameraView extends FrameLayout {
             case 0 : //none
                 return new Camera2Api23(mCallbacks, preview, context);
             case 1 : //barcode
-                return new Camera1ZBar(mCallbacks, preview);
+                return new Camera2ZBarApi23(mCallbacks, preview, context);
             default:
                 return new Camera2Api23(mCallbacks, preview, context);
         }
@@ -624,15 +624,15 @@ public class CameraView extends FrameLayout {
         @Override
         public void onPictureTaken(byte[] image) {
             if(!isScreenShot){
-                image = ImageHelper.Companion.rotateBitmap(image);
-                image = ImageHelper.Companion.resize(getContext(), image,getWidth(),getHeight());
+                image = ImageUtils.Companion.rotateBitmap(image);
+                image = ImageUtils.Companion.resize(getContext(), image,getWidth(),getHeight());
             }
 
             if(isSaveImage){
                 new ImageSavingTask(getContext(), image).execute();
             }
 
-            byte[] transformedData = ImageHelper.Companion.resize(getContext(), image, takenPictureWidth, takenPictureHeight);
+            byte[] transformedData = ImageUtils.Companion.resize(getContext(), image, takenPictureWidth, takenPictureHeight);
             for (Callback callback : mCallbacks) {
                 callback.onPictureTakenOriginal(CameraView.this, image);
                 callback.onPictureTaken(CameraView.this, transformedData);
@@ -641,7 +641,7 @@ public class CameraView extends FrameLayout {
 
         @Override
         public void onPictureTaken(Bitmap bitmap) {
-            byte[] data = ImageHelper.Companion.compressAndTransformToBytes(bitmap);
+            byte[] data = ImageUtils.Companion.compressAndTransformToBytes(bitmap);
             onPictureTaken(data);
         }
 

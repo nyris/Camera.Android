@@ -17,8 +17,16 @@ import java.io.File
  * Created by nyris GmbH
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
-internal class ImageHelper{
+internal class ImageUtils{
     companion object {
+        init {
+            try {
+                System.loadLibrary("image_utils")
+            } catch (e: UnsatisfiedLinkError) {
+                e.printStackTrace()
+            }
+        }
+
         fun rotateBitmap(image : ByteArray): ByteArray {
             val bitmap = BitmapFactory.decodeByteArray(image, 0, image.size)
             val matrix = Matrix()
@@ -93,5 +101,38 @@ internal class ImageHelper{
             val state = Environment.getExternalStorageState()
             return state == Environment.MEDIA_MOUNTED
         }
+
+        fun rotateBitmap(bitmap: Bitmap, rotation : Float) : Bitmap{
+            val matrix = Matrix()
+            matrix.postRotate(rotation)
+            val scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width, bitmap.height, true)
+            return Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.width, scaledBitmap.height, matrix, true)
+        }
     }
+
+    /**
+     * Converts YUV420 semi-planar data to ARGB 8888 data using the supplied width
+     * and height. The input and output must already be allocated and non-null.
+     * For efficiency, no error checking is performed.
+     *
+     * @param y
+     * @param u
+     * @param v
+     * @param uvPixelStride
+     * @param width The width of the input image.
+     * @param height The height of the input image.
+     * @param halfSize If true, downsample to 50% in each dimension, otherwise not.
+     * @param output A pre-allocated array for the ARGB 8:8:8:8 output data.
+     */
+    external fun convertYUV420ToARGB8888(
+            y: ByteArray?,
+            u: ByteArray?,
+            v: ByteArray?,
+            output: IntArray,
+            width: Int,
+            height: Int,
+            yRowStride: Int,
+            uvRowStride: Int,
+            uvPixelStride: Int,
+            halfSize: Boolean)
 }
