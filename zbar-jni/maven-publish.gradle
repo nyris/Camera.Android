@@ -1,0 +1,99 @@
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.github.dcendents.android-maven'
+
+def jniVersion = "0.10"
+group='io.nyris'
+version = jniVersion
+
+//TODO: to be removed when bintray fix the issue https://github.com/bintray/gradle-bintray-plugin/issues/199
+project.archivesBaseName = "sdk"
+
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            url POM_URL_ZBAR
+            inceptionYear '2018'
+            packaging 'aar'
+            name POM_NAME_ZBAR
+            description POM_DESCRIPTION_ZBAR
+
+            groupId POM_GROUP_ID
+            artifactId POM_ARTIFACT_ID_ZBAR
+            version version
+
+            licenses {
+                license {
+                    name 'GNU Lesser General Public License v2.1'
+                    url 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html'
+                }
+            }
+        }
+
+        pom.withXml {
+            Node pomNode = asNode()
+            pomNode.dependencies.'*'.findAll() {
+                it.scope.text() == 'test'
+            }.each() {
+                it.parent().remove(it)
+            }
+        }
+    }
+}
+
+bintray {
+    user = System.getenv("BINTRAY_USER")
+    key = System.getenv("BINTRAY_KEY")
+    configurations = ['archives']
+    publish = true
+
+    pkg {
+        repo = BINTRAY_REPO
+        name = BINTRAY_NAME
+        userOrg = BINTRAY_ORG
+        licenses = ['LGPL-2.1']
+        publicDownloadNumbers = true
+
+        version {
+            name = version
+            desc = POM_DESCRIPTION_ZBAR
+            vcsTag = version
+        }
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.version = version
+            pom.groupId = POM_GROUP_ID
+            pom.artifactId = POM_ARTIFACT_ID_ZBAR
+
+            pom.project{
+                inceptionYear '2018'
+
+                licenses {
+                    license {
+                        name 'GNU Lesser General Public License v2.1'
+                        url 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html'
+                    }
+                }
+            }
+
+            pom.withXml {
+                Node pomNode = asNode()
+                pomNode.dependencies.'*'.findAll() {
+                    it.scope.text() == 'test'
+                }.each() {
+                    it.parent().remove(it)
+                }
+            }
+            repository(url: System.getenv("NUGET_URL")){
+                authentication(userName: System.getenv("NUGET_USER"), password: System.getenv("NUGET_PASSWORD"))
+            }
+        }
+    }
+    doLast{
+        println android.defaultPublishConfig
+        println "\u001B[32mUploaded ZBAR version : $version\u001B[0m"
+    }
+}
