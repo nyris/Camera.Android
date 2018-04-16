@@ -588,6 +588,10 @@ public class CameraView extends FrameLayout {
         }
     }
 
+    public void addBarcodeListener(IBarcodeListener barcodeListener){
+        mImpl.addBarcodeListener(barcodeListener);
+    }
+
     private class CallbackBridge implements CameraViewImpl.Callback {
         private final ArrayList<Callback> mCallbacks = new ArrayList<>();
         private boolean mRequestLayoutOnOpen;

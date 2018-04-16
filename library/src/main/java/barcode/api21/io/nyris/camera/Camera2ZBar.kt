@@ -23,7 +23,16 @@ import java.util.*
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
 @TargetApi(21)
-internal open class Camera2ZBar(callback : Callback, preview : PreviewImpl, context : Context) : Camera2(callback, preview, context){
+internal open class Camera2ZBar(callback : Callback, preview : PreviewImpl, context : Context) : IBarcodeView, Camera2(callback, preview, context){
+    companion object {
+        init {
+            try {
+                System.loadLibrary("iconv")
+            } catch (e: UnsatisfiedLinkError) {
+                e.printStackTrace()
+            }
+        }
+    }
     private var scanner: ImageScanner = ImageScanner()
     private val barcodeListeners: MutableList<IBarcodeListener> = mutableListOf()
     private var isBarcodeEnabled : Boolean = true
@@ -48,12 +57,14 @@ internal open class Camera2ZBar(callback : Callback, preview : PreviewImpl, cont
 
     private val mBarcodeImageListener = ImageReader.OnImageAvailableListener { reader ->
         listenerHandler?.post({
+            val image = reader.acquireLatestImage() ?: return@post
+
             if(!isBarcodeEnabled){
                 isComputing = false
+                image.close()
                 return@post
             }
 
-            val image = reader.acquireLatestImage() ?: return@post
             if(isComputing){
                 image.close()
                 return@post
