@@ -223,7 +223,7 @@ class Camera2 extends CameraViewImpl {
     }
 
     @Override
-    void stopPreview() {
+    protected void stopPreview() {
         if(mCaptureSession!= null)
             mCaptureSession.close();
     }

@@ -26,12 +26,12 @@ import java.util.*
 internal open class Camera2ZBar(callback : Callback, preview : PreviewImpl, context : Context) : Camera2(callback, preview, context){
     private var scanner: ImageScanner = ImageScanner()
     private val barcodeListeners: MutableList<IBarcodeListener> = mutableListOf()
-    private var isEnableBarcode : Boolean = true
+    private var isBarcodeEnabled : Boolean = true
 
-    private var listenerThread: HandlerThread? = HandlerThread("listenerThread")
+    private var listenerThread: HandlerThread? = null
     private var listenerHandler: Handler? = null
 
-    private lateinit var frameSize: Size
+    private var isComputing = false
 
     init {
         scanner.setConfig(0, Config.X_DENSITY, 3)
@@ -43,56 +43,75 @@ internal open class Camera2ZBar(callback : Callback, preview : PreviewImpl, cont
     }
 
     override fun enableBarcode(isEnabled: Boolean) {
-        isEnableBarcode = isEnabled
+        isBarcodeEnabled = isEnabled
     }
 
     private val mBarcodeImageListener = ImageReader.OnImageAvailableListener { reader ->
-        val image = reader.acquireLatestImage() ?: return@OnImageAvailableListener
-
-        val planes = image.planes
-        if (!planes.isNotEmpty()) {
-            image.close()
-            return@OnImageAvailableListener
-        }
-
-        val buffer = image.planes[0].buffer
-        val bytes = ByteArray(buffer.capacity())
-        buffer.get(bytes)
-        val barcode = net.sourceforge.zbar.Image(frameSize.width, frameSize.height, "Y800")
-        barcode.data = bytes
-        val result = scanner.scanImage(barcode)
-        if (result == 0) {
-            image.close()
-            return@OnImageAvailableListener
-        }
-
-        val syms = scanner.results
-        val barcodeInstance = Barcode()
-        for (sym in syms) {
-            var symData: String
-            symData = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                String(sym.dataBytes, StandardCharsets.UTF_8)
-            } else {
-                sym.data
+        listenerHandler?.post({
+            if(!isBarcodeEnabled){
+                isComputing = false
+                return@post
             }
-            if (!TextUtils.isEmpty(symData)) {
-                symData = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                    String(sym.dataBytes, StandardCharsets.UTF_8)
-                } else {
-                    sym.data
+
+            val image = reader.acquireLatestImage() ?: return@post
+            if(isComputing){
+                image.close()
+                return@post
+            }
+
+            val planes = image.planes
+            if (!planes.isNotEmpty()) {
+                image.close()
+                return@post
+            }
+
+            try {
+                isComputing = true
+                val buffer = image.planes[0].buffer
+                val bytes = ByteArray(buffer.capacity())
+                buffer.get(bytes)
+                val barcode = net.sourceforge.zbar.Image(reader.width, reader.height, "Y800")
+                barcode.data = bytes
+                val result = scanner.scanImage(barcode)
+                if (result == 0) {
+                    image.close()
+                    return@post
                 }
-                if (!TextUtils.isEmpty(symData)) {
-                    barcodeInstance.contents = symData
-                    barcodeInstance.format = BarcodeFormat.getFormatById(sym.type)
+
+                val syms = scanner.results
+                val barcodeInstance = Barcode()
+                for (sym in syms) {
+                    var symData: String
+                    symData = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                        String(sym.dataBytes, StandardCharsets.UTF_8)
+                    } else {
+                        sym.data
+                    }
+                    if (!TextUtils.isEmpty(symData)) {
+                        symData = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                            String(sym.dataBytes, StandardCharsets.UTF_8)
+                        } else {
+                            sym.data
+                        }
+                        if (!TextUtils.isEmpty(symData)) {
+                            barcodeInstance.contents = symData
+                            barcodeInstance.format = BarcodeFormat.getFormatById(sym.type)
+                        }
+                    }
+                }
+
+                for (barcodeListener in barcodeListeners) {
+                    barcodeListener.onBarcode(barcodeInstance)
                 }
             }
-        }
-
-        for (barcodeListener in barcodeListeners) {
-            barcodeListener.onBarcode(barcodeInstance)
-        }
-
-        image.close()
+            catch (e : Exception){
+                e.printStackTrace()
+            }
+            finally {
+                isComputing = false
+                image.close()
+            }
+        })
     }
 
     private val mCaptureCallback = object : CameraCaptureSession.CaptureCallback() {
@@ -137,6 +156,7 @@ internal open class Camera2ZBar(callback : Callback, preview : PreviewImpl, cont
     }
 
     override fun start(): Boolean {
+        listenerThread = HandlerThread("listenerThread")
         listenerThread?.start()
         listenerHandler = Handler(listenerThread?.looper)
         return super.start()
@@ -145,6 +165,11 @@ internal open class Camera2ZBar(callback : Callback, preview : PreviewImpl, cont
     override fun stop() {
         super.stop()
         stopBarcodeThread()
+    }
+
+    override fun stopPreview() {
+        stopBarcodeThread()
+        super.stopPreview()
     }
 
     private fun stopBarcodeThread() {
@@ -165,7 +190,7 @@ internal open class Camera2ZBar(callback : Callback, preview : PreviewImpl, cont
         if (!isCameraOpened || !mPreview.isReady) {
             return
         }
-        frameSize = chooseOptimalSize()
+        val frameSize = chooseOptimalSize()
         mPreview.setBufferSize(frameSize.width, frameSize.height)
         val surface = mPreview.surface
         try {
