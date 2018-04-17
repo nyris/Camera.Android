@@ -1,0 +1,3 @@
+[submodule "library/src/dev"]
+	path = library/src/dev
+	url = ../nyris.camera.android.internal.git
