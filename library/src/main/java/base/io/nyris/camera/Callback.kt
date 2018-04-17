@@ -8,38 +8,38 @@ package io.nyris.camera
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
 /**
- * Callback for monitoring events about [CameraView].
+ * Callback for monitoring events about [BaseCameraView].
  */
 interface Callback {
     /**
      * Called when camera is opened.
      *
-     * @param cameraView The associated [CameraView].
+     * @param cameraView The associated [BaseCameraView].
      */
-    fun onCameraOpened(cameraView: CameraView)
+    fun onCameraOpened(cameraView: BaseCameraView)
 
     /**
      * Called when camera is closed.
      *
-     * @param cameraView The associated [CameraView].
+     * @param cameraView The associated [BaseCameraView].
      */
-    fun onCameraClosed(cameraView: CameraView)
+    fun onCameraClosed(cameraView: BaseCameraView)
 
     /**
      * Called when a picture is taken.
      *
-     * @param cameraView The associated [CameraView].
+     * @param cameraView The associated [BaseCameraView].
      * @param resizedImage JPEG data.
      */
-    fun onPictureTaken(cameraView: CameraView, resizedImage: ByteArray)
+    fun onPictureTaken(cameraView: BaseCameraView, resizedImage: ByteArray)
 
     /**
      * Called when a picture is taken.
      *
-     * @param cameraView The associated [CameraView].
+     * @param cameraView The associated [BaseCameraView].
      * @param original JPEG data.
      */
-    fun onPictureTakenOriginal(cameraView: CameraView, original: ByteArray)
+    fun onPictureTakenOriginal(cameraView: BaseCameraView, original: ByteArray)
 
     /**
      * Called when a picture is taken.

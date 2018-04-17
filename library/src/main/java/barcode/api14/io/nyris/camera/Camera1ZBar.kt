@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets
  */
 
 @Suppress("DEPRECATION")
-internal class Camera1ZBar(callback: CameraViewImpl.Callback, preview: PreviewImpl) : IBarcodeView, Camera1(callback, preview), Camera.PreviewCallback {
+internal class Camera1ZBar(callback: CameraViewImpl.Callback?, preview: PreviewImpl) : IBarcodeView, Camera1(callback, preview), Camera.PreviewCallback {
     companion object {
         init {
             try {

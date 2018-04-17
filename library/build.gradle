@@ -68,6 +68,7 @@ android {
     }
 
     sourceSets {
+        dev.java.srcDirs += 'src/dev/java/ai'
         dev.java.srcDirs += 'src/dev/java/ai/api14'
         dev.java.srcDirs += 'src/dev/java/ai/api21'
         dev.java.srcDirs += 'src/dev/java/ai/api23'
@@ -83,10 +84,12 @@ android {
         main.java.srcDirs += 'src/main/java/barcode/api21'
         main.java.srcDirs += 'src/main/java/barcode/api23'
 
+        main.java.srcDirs += 'src/main/java/ai'
         main.java.srcDirs += 'src/main/java/ai/api14'
         main.java.srcDirs += 'src/main/java/ai/api21'
         main.java.srcDirs += 'src/main/java/ai/api23'
 
+        prod.java.srcDirs += 'src/prod/java/ai'
         prod.java.srcDirs += 'src/prod/java/ai/api14'
         prod.java.srcDirs += 'src/prod/java/ai/api21'
         prod.java.srcDirs += 'src/prod/java/ai/api23'

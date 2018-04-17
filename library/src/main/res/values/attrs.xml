@@ -61,13 +61,5 @@
 
         <!-- Enabled barcode mode mode. -->
         <attr name="saveImage" format="boolean"/>
-
-        <!-- The recognition mode. -->
-        <attr name="recognition" format="enum">
-            <!-- Enabled barcode mode mode. -->
-            <enum name="none" value="0"/>
-            <!-- Enabled barcode mode mode. -->
-            <enum name="barcode" value="1"/>
-        </attr>
     </declare-styleable>
 </resources>

@@ -32,6 +32,7 @@ import android.view.ViewGroup;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.core.IsAnything;
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -270,22 +271,37 @@ public class CameraViewTest {
      */
     private static class CameraViewIdlingResource implements IdlingResource, Closeable {
 
-        private final CameraView.Callback mCallback
-                = new CameraView.Callback() {
+        private final Callback mCallback
+                = new Callback() {
 
             @Override
-            public void onCameraOpened(CameraView cameraView) {
+            public void onError(@NotNull String errorMessage) {
+
+            }
+
+            @Override
+            public void onPictureTakenOriginal(@NotNull BaseCameraView cameraView, @NotNull byte[] original) {
+
+            }
+
+            @Override
+            public void onPictureTaken(@NotNull BaseCameraView cameraView, @NotNull byte[] resizedImage) {
+
+            }
+
+            @Override
+            public void onCameraClosed(@NotNull BaseCameraView cameraView) {
+                mIsIdleNow = false;
+            }
+
+            @Override
+            public void onCameraOpened(@NotNull BaseCameraView cameraView) {
                 if (!mIsIdleNow) {
                     mIsIdleNow = true;
                     if (mResourceCallback != null) {
                         mResourceCallback.onTransitionToIdle();
                     }
                 }
-            }
-
-            @Override
-            public void onCameraClosed(CameraView cameraView) {
-                mIsIdleNow = false;
             }
         };
 
@@ -325,10 +341,30 @@ public class CameraViewTest {
 
     private static class TakePictureIdlingResource implements IdlingResource, Closeable {
 
-        private final CameraView.Callback mCallback
-                = new CameraView.Callback() {
+        private final Callback mCallback
+                = new Callback() {
             @Override
-            public void onPictureTaken(CameraView cameraView, byte[] data) {
+            public void onError(@NotNull String errorMessage) {
+
+            }
+
+            @Override
+            public void onPictureTakenOriginal(@NotNull BaseCameraView cameraView, @NotNull byte[] original) {
+
+            }
+
+            @Override
+            public void onCameraClosed(@NotNull BaseCameraView cameraView) {
+
+            }
+
+            @Override
+            public void onCameraOpened(@NotNull BaseCameraView cameraView) {
+
+            }
+
+            @Override
+            public void onPictureTaken(@NotNull BaseCameraView cameraView, @NotNull byte[] data) {
                 if (!mIsIdleNow) {
                     mIsIdleNow = true;
                     mValidJpeg = data.length > 2 &&

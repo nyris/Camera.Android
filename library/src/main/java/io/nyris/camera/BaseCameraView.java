@@ -40,13 +40,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Set;
 
-public class CameraView extends FrameLayout {
+public class BaseCameraView extends FrameLayout {
 
     /** The camera device faces the opposite direction as the device's screen. */
     public static final int FACING_BACK = Constants.FACING_BACK;
 
     /** The camera device faces the same direction as the device's screen. */
     public static final int FACING_FRONT = Constants.FACING_FRONT;
+
+    /** type of the recognition */
+    protected int typeRecognition = 0;
 
     /** Direction the camera faces relative to device screen. */
     @IntDef({FACING_BACK, FACING_FRONT})
@@ -76,13 +79,11 @@ public class CameraView extends FrameLayout {
 
     CameraViewImpl mImpl;
 
-    private final CallbackBridge mCallbacks;
-
-    private boolean mAdjustViewBounds;
+    protected boolean mAdjustViewBounds;
 
     private final DisplayOrientationDetector mDisplayOrientationDetector;
 
-    private boolean isScreenShot;
+    protected boolean isScreenShot;
 
     private boolean isTakeScreenshot;
 
@@ -92,54 +93,23 @@ public class CameraView extends FrameLayout {
 
     private int takenPictureHeight = 512;
 
-    public CameraView(Context context) {
+    protected CallbackBridge mCallbacks;
+
+    protected BaseCameraView(Context context) {
         this(context, null);
     }
 
-    public CameraView(Context context, AttributeSet attrs) {
+    protected BaseCameraView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
     @SuppressWarnings("WrongConstant")
-    public CameraView(Context context, AttributeSet attrs, int defStyleAttr) {
+    protected BaseCameraView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         if (isInEditMode()){
-            mCallbacks = null;
             mDisplayOrientationDetector = null;
             return;
         }
-        // Attributes
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CameraView, defStyleAttr,
-                R.style.Widget_CameraView);
-        int typeRecognition = a.getInt(R.styleable.CameraView_recognition,0);
-
-        // Internal setup
-        final PreviewImpl preview = createPreviewImpl(context);
-        mCallbacks = new CallbackBridge();
-        if (Build.VERSION.SDK_INT < 21) {
-            mImpl = cameraBelow21(typeRecognition, preview, context);
-        } else if (Build.VERSION.SDK_INT < 23) {
-            mImpl = cameraAbove21Low23(typeRecognition, preview, context);
-        } else {
-            mImpl = cameraAbove23(typeRecognition, preview, context);
-        }
-
-        mAdjustViewBounds = a.getBoolean(R.styleable.CameraView_android_adjustViewBounds, false);
-        setFacing(a.getInt(R.styleable.CameraView_facing, FACING_BACK));
-        String aspectRatio = a.getString(R.styleable.CameraView_aspectRatio);
-        if (aspectRatio != null) {
-            setAspectRatio(AspectRatio.parse(aspectRatio));
-        } else {
-            setAspectRatio(Constants.DEFAULT_ASPECT_RATIO);
-        }
-        setAutoFocus(a.getBoolean(R.styleable.CameraView_autoFocus, true));
-        setFlash(a.getInt(R.styleable.CameraView_flash, Constants.FLASH_AUTO));
-
-        setSaveImage(a.getBoolean(R.styleable.CameraView_saveImage, false));
-        setTakenPictureWidth(a.getInt(R.styleable.CameraView_imageWidth, 512));
-        setTakenPictureHeight(a.getInt(R.styleable.CameraView_imageHeight, 512));
-        a.recycle();
-
         // Display orientation detector
         mDisplayOrientationDetector = new DisplayOrientationDetector(context) {
             @Override
@@ -147,7 +117,6 @@ public class CameraView extends FrameLayout {
                 mImpl.setDisplayOrientation(displayOrientation);
             }
         };
-        updateFocusMarkerView(preview);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -185,7 +154,7 @@ public class CameraView extends FrameLayout {
     }
 
     @NonNull
-    private PreviewImpl createPreviewImpl(Context context) {
+    protected PreviewImpl createPreviewImpl(Context context) {
         PreviewImpl preview;
         if (Build.VERSION.SDK_INT < 14) {
             preview = new SurfaceViewPreview(context, this);
@@ -193,39 +162,6 @@ public class CameraView extends FrameLayout {
             preview = new TextureViewPreview(context, this);
         }
         return preview;
-    }
-
-    private CameraViewImpl cameraBelow21(int type, PreviewImpl preview, Context context){
-        switch (type){
-            case 0 : //none
-                return new Camera1(mCallbacks, preview);
-            case 1 : //barcode
-                return new Camera1ZBar(mCallbacks, preview);
-            default:
-                return new Camera1(mCallbacks, preview);
-        }
-    }
-
-    private CameraViewImpl cameraAbove21Low23(int type, PreviewImpl preview, Context context){
-        switch (type){
-            case 0 : //none
-                return new Camera2(mCallbacks, preview, context);
-            case 1 : //barcode
-                return new Camera2ZBar(mCallbacks, preview, context);
-            default:
-                return new Camera2(mCallbacks, preview, context);
-        }
-    }
-
-    private CameraViewImpl cameraAbove23(int type, PreviewImpl preview, Context context){
-        switch (type){
-            case 0 : //none
-                return new Camera2Api23(mCallbacks, preview, context);
-            case 1 : //barcode
-                return new Camera2ZBarApi23(mCallbacks, preview, context);
-            default:
-                return new Camera2Api23(mCallbacks, preview, context);
-        }
     }
 
     @Override
@@ -466,7 +402,7 @@ public class CameraView extends FrameLayout {
      * Get taken picture width
      * @return The width of the taken picture
      */
-    public float getTakenPictureWidth() {
+    public int getTakenPictureWidth() {
         return takenPictureWidth;
     }
 
@@ -474,7 +410,7 @@ public class CameraView extends FrameLayout {
      * Get taken picture height
      * @return The height of the taken picture
      */
-    public float getTakenPictureHeight() {
+    public int getTakenPictureHeight() {
         return takenPictureHeight;
     }
 
@@ -564,8 +500,16 @@ public class CameraView extends FrameLayout {
     }
 
     /**
+     * Add barcode listener
+     * @param barcodeListener the barcode listener
+     */
+    public void addBarcodeListener(IBarcodeListener barcodeListener){
+        mImpl.addBarcodeListener(barcodeListener);
+    }
+
+    /**
      * Take a picture. The result will be returned to
-     * {@link Callback#onPictureTaken(CameraView, byte[])}.
+     * {@link Callback#onPictureTaken(BaseCameraView, byte[])}.
      */
     public void takePicture() {
         isScreenShot = false;
@@ -588,22 +532,18 @@ public class CameraView extends FrameLayout {
         }
     }
 
-    public void addBarcodeListener(IBarcodeListener barcodeListener){
-        mImpl.addBarcodeListener(barcodeListener);
-    }
-
-    private class CallbackBridge implements CameraViewImpl.Callback {
+    protected class CallbackBridge implements CameraViewImpl.Callback {
         private final ArrayList<Callback> mCallbacks = new ArrayList<>();
         private boolean mRequestLayoutOnOpen;
-
         CallbackBridge() {
+
         }
 
         public void add(Callback callback) {
             mCallbacks.add(callback);
         }
 
-        void remove(Callback callback) {
+        public void remove(Callback callback) {
             mCallbacks.remove(callback);
         }
 
@@ -614,32 +554,31 @@ public class CameraView extends FrameLayout {
                 requestLayout();
             }
             for (Callback callback : mCallbacks) {
-                callback.onCameraOpened(CameraView.this);
+                callback.onCameraOpened(BaseCameraView.this);
             }
         }
-
         @Override
         public void onCameraClosed() {
             for (Callback callback : mCallbacks) {
-                callback.onCameraClosed(CameraView.this);
+                callback.onCameraClosed(BaseCameraView.this);
             }
         }
 
         @Override
         public void onPictureTaken(byte[] image) {
-            if(!isScreenShot){
+            if (!isScreenShot) {
                 image = ImageUtils.Companion.rotateBitmap(image);
-                image = ImageUtils.Companion.resize(getContext(), image,getWidth(),getHeight());
+                image = ImageUtils.Companion.resize(getContext(), image, getWidth(), getHeight());
             }
 
-            if(isSaveImage){
+            if (isSaveImage) {
                 new ImageSavingTask(getContext(), image).execute();
             }
 
             byte[] transformedData = ImageUtils.Companion.resize(getContext(), image, takenPictureWidth, takenPictureHeight);
             for (Callback callback : mCallbacks) {
-                callback.onPictureTakenOriginal(CameraView.this, image);
-                callback.onPictureTaken(CameraView.this, transformedData);
+                callback.onPictureTakenOriginal(BaseCameraView.this, image);
+                callback.onPictureTaken(BaseCameraView.this, transformedData);
             }
         }
 
@@ -655,10 +594,10 @@ public class CameraView extends FrameLayout {
                 callback.onError(errorMessage);
             }
         }
-
-        void reserveRequestLayoutOnOpen() {
+        public void reserveRequestLayoutOnOpen() {
             mRequestLayoutOnOpen = true;
         }
+        public ArrayList<Callback> getCallbacks() { return mCallbacks;}
     }
 
     protected static class SavedState extends BaseSavedState {
