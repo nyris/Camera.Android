@@ -18,13 +18,8 @@ package io.nyris.camera.demo;
 
 import android.Manifest;
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.design.widget.FloatingActionButton;
@@ -42,18 +37,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Objects;
 import java.util.Set;
 
 import io.nyris.camera.AspectRatio;
-import io.nyris.camera.Barcode;
 import io.nyris.camera.Callback;
+import io.nyris.camera.BaseCameraView;
 import io.nyris.camera.CameraView;
-import io.nyris.camera.IBarcodeListener;
 
 
 /**
@@ -228,27 +218,26 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         @Override
-        public void onPictureTakenOriginal(@NonNull CameraView cameraView, @NonNull byte[] original) {
+        public void onPictureTakenOriginal(@NonNull BaseCameraView cameraView, @NonNull byte[] original) {
 
         }
 
         @Override
-        public void onCameraOpened(@NonNull CameraView cameraView) {
+        public void onCameraOpened(@NonNull BaseCameraView cameraView) {
             Log.d(TAG, "onCameraOpened");
         }
 
         @Override
-        public void onCameraClosed(@NonNull CameraView cameraView) {
+        public void onCameraClosed(@NonNull BaseCameraView cameraView) {
             Log.d(TAG, "onCameraClosed");
         }
 
         @Override
-        public void onPictureTaken(CameraView cameraView, final byte[] data) {
+        public void onPictureTaken(BaseCameraView cameraView, final byte[] data) {
             Log.d(TAG, "onPictureTaken " + data.length);
             Toast.makeText(cameraView.getContext(), R.string.picture_taken, Toast.LENGTH_SHORT)
                     .show();
         }
-
     };
 
     public static class ConfirmationDialogFragment extends DialogFragment {
