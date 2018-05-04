@@ -150,20 +150,20 @@ class Camera2 extends CameraViewImpl {
     private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
             = reader -> {
 
-                try (Image image = reader.acquireNextImage()) {
-                    Image.Plane[] planes = image.getPlanes();
-                    if (planes.length > 0) {
-                        ByteBuffer buffer = planes[0].getBuffer();
-                        byte[] data = new byte[buffer.remaining()];
-                        buffer.get(data);
-                        mCallback.onPictureTaken(data);
-                    }
-                }
-            };
+        try (Image image = reader.acquireNextImage()) {
+            Image.Plane[] planes = image.getPlanes();
+            if (planes.length > 0) {
+                ByteBuffer buffer = planes[0].getBuffer();
+                byte[] data = new byte[buffer.remaining()];
+                buffer.get(data);
+                mCallback.onPictureTaken(data);
+            }
+        }
+    };
 
     private String mCameraId;
 
-    private CameraCharacteristics mCameraCharacteristics;
+    protected CameraCharacteristics mCameraCharacteristics;
 
     protected CameraDevice mCamera;
 
@@ -177,7 +177,7 @@ class Camera2 extends CameraViewImpl {
 
     protected final SizeMap mPictureSizes = new SizeMap();
 
-    private int mFacing;
+    protected int mFacing;
 
     protected AspectRatio mAspectRatio = Constants.DEFAULT_ASPECT_RATIO;
 
@@ -187,7 +187,7 @@ class Camera2 extends CameraViewImpl {
 
     private int mDisplayOrientation;
 
-    protected float sensorOrientation = 0;
+    protected int sensorOrientation = 0;
 
     Camera2(Callback callback, PreviewImpl preview, Context context) {
         super(callback, preview);
@@ -480,38 +480,6 @@ class Camera2 extends CameraViewImpl {
         } catch (CameraAccessException e) {
             mCallback.onError("Failed to start camera session");
         }
-        sensorOrientation = getCorrectCameraOrientation(false,sensorOrientation);
-    }
-
-    private float getCorrectCameraOrientation(boolean isFacing, float sensorOrientation) {
-        Activity activity = ((Activity)getView().getContext());
-        if(activity == null)
-            return sensorOrientation;
-
-        int rotation = ((Activity)getView().getContext()).getWindowManager().getDefaultDisplay().getRotation();
-        int degrees = 0;
-        switch(rotation){
-            case Surface.ROTATION_0:
-                degrees = 0;
-                break;
-            case Surface.ROTATION_90:
-                degrees = 90;
-                break;
-            case Surface.ROTATION_180:
-                degrees = 180;
-                break;
-            case Surface.ROTATION_270:
-                degrees = 270;
-                break;
-        }
-        float result;
-        if(isFacing){
-            result = (sensorOrientation + degrees) % 360;
-            result = (360 - result) % 360;
-        }else{
-            result = (sensorOrientation - degrees + 360) % 360;
-        }
-        return result;
     }
 
     /**

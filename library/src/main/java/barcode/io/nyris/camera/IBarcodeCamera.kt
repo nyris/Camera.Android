@@ -7,4 +7,4 @@ package io.nyris.camera
  * Created by nyris GmbH
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
-interface IBarcodeView
+interface IBarcodeCamera

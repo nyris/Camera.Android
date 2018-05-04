@@ -104,6 +104,12 @@ abstract class CameraViewImpl {
     void enableBarcode(boolean isEnabled){
     }
 
+    void enableInfrenceStats(boolean enable){
+    }
+
+    void setRecognitionHandler(IRecognitionHandler recognitionHandler){
+    }
+
     Bitmap getPreviewBitmap(int cameraWidth, int cameraHeight) {
         if(mPreview == null)
             return null;

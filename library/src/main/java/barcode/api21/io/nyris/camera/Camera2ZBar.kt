@@ -23,7 +23,7 @@ import java.util.*
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
 @TargetApi(21)
-internal open class Camera2ZBar(callback : Callback?, preview : PreviewImpl, context : Context) : IBarcodeView, Camera2(callback, preview, context){
+internal open class Camera2ZBar(callback : Callback?, preview : PreviewImpl, context : Context) : IBarcodeCamera, Camera2(callback, preview, context){
     companion object {
         init {
             try {

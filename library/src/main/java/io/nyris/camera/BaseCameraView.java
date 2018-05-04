@@ -19,7 +19,6 @@ package io.nyris.camera;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Parcel;
@@ -274,13 +273,13 @@ public class BaseCameraView extends FrameLayout {
         isTakeScreenshot = false;
         try {
             if (!mImpl.start()) {
-                //store the state ,and restore this state after fall back o Camera1
                 Parcelable state=onSaveInstanceState();
                 // Camera2 uses legacy hardware layer; fall back to Camera1
                 PreviewImpl preview = createPreviewImpl(getContext(), true);
                 mImpl = new Camera1(mCallbacks, preview);
                 onRestoreInstanceState(state);
                 mImpl.start();
+                updateFocusMarkerView(preview);
             }
         }
         catch (Exception e){
@@ -457,7 +456,7 @@ public class BaseCameraView extends FrameLayout {
      * Enable Barcode recognition
      */
     public void enableBarcode(boolean isEnabled) {
-        if(!(mImpl instanceof IBarcodeView)){
+        if(!(mImpl instanceof IBarcodeCamera)){
             final PreviewImpl preview = createPreviewImpl(getContext(), isEnabled);
             CameraViewImpl cameraViewImpl = new Camera1ZBar(mCallbacks, preview);
             cameraViewImpl.setFlash(mImpl.getFlash());
