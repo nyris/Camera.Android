@@ -16,7 +16,6 @@
 
 package io.nyris.camera;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.view.SurfaceView;
@@ -104,10 +103,13 @@ abstract class CameraViewImpl {
     void enableBarcode(boolean isEnabled){
     }
 
-    void enableInfrenceStats(boolean enable){
+    void enableInferenceStats(boolean enable){
     }
 
-    void setRecognitionHandler(IRecognitionHandler recognitionHandler){
+    void renderInferenceStats(Canvas canvas){
+    }
+
+    void setRecognitionListener(IRecognitionListener recognitionHandler){
     }
 
     Bitmap getPreviewBitmap(int cameraWidth, int cameraHeight) {

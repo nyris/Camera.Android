@@ -21,7 +21,7 @@ internal class ImageUtils{
     companion object {
         init {
             try {
-                System.loadLibrary("image_utils")
+                System.loadLibrary("ImageUtils")
             } catch (e: UnsatisfiedLinkError) {
                 e.printStackTrace()
             }
@@ -108,31 +108,94 @@ internal class ImageUtils{
             val scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width, bitmap.height, true)
             return Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.width, scaledBitmap.height, matrix, true)
         }
-    }
 
-    /**
-     * Converts YUV420 semi-planar data to ARGB 8888 data using the supplied width
-     * and height. The input and output must already be allocated and non-null.
-     * For efficiency, no error checking is performed.
-     *
-     * @param y
-     * @param u
-     * @param v
-     * @param uvPixelStride
-     * @param width The width of the input image.
-     * @param height The height of the input image.
-     * @param halfSize If true, downsample to 50% in each dimension, otherwise not.
-     * @param output A pre-allocated array for the ARGB 8:8:8:8 output data.
-     */
-    external fun convertYUV420ToARGB8888(
-            y: ByteArray?,
-            u: ByteArray?,
-            v: ByteArray?,
-            output: IntArray,
-            width: Int,
-            height: Int,
-            yRowStride: Int,
-            uvRowStride: Int,
-            uvPixelStride: Int,
-            halfSize: Boolean)
+        /**
+         * Converts YUV420 semi-planar data to ARGB 8888 data using the supplied width
+         * and height. The input and output must already be allocated and non-null.
+         * For efficiency, no error checking is performed.
+         *
+         * @param y
+         * @param u
+         * @param v
+         * @param uvPixelStride
+         * @param width The width of the input image.
+         * @param height The height of the input image.
+         * @param halfSize If true, downsample to 50% in each dimension, otherwise not.
+         * @param output A pre-allocated array for the ARGB 8:8:8:8 output data.
+         */
+        @JvmStatic
+        external fun stringFromJNI() : String
+
+        @JvmStatic
+        external fun convertYUV420ToARGB8888(
+                y: ByteArray?,
+                u: ByteArray?,
+                v: ByteArray?,
+                output: IntArray?,
+                width: Int,
+                height: Int,
+                yRowStride: Int,
+                uvRowStride: Int,
+                uvPixelStride: Int,
+                halfSize: Boolean)
+
+        /**
+         * Returns a transformation matrix from one reference frame into another.
+         * Handles cropping (if maintaining aspect ratio is desired) and rotation.
+         *
+         * @param srcWidth Width of source frame.
+         * @param srcHeight Height of source frame.
+         * @param dstWidth Width of destination frame.
+         * @param dstHeight Height of destination frame.
+         * @param applyRotation Amount of rotation to apply from one frame to another.
+         * Must be a multiple of 90.
+         * @param maintainAspectRatio If true, will ensure that scaling in x and y remains constant,
+         * cropping the image if necessary.
+         * @return The transformation fulfilling the desired requirements.
+         */
+        fun getTransformationMatrix(
+                srcWidth: Int,
+                srcHeight: Int,
+                dstWidth: Int,
+                dstHeight: Int,
+                applyRotation: Int,
+                maintainAspectRatio: Boolean): Matrix {
+            val matrix = Matrix()
+
+            // Translate so center of image is at origin.
+            matrix.postTranslate(-srcWidth / 2.0f, -srcHeight / 2.0f)
+
+            // Rotate around origin.
+            matrix.postRotate(applyRotation.toFloat())
+
+            // Account for the already applied rotation, if any, and then determine how
+            // much scaling is needed for each axis.
+            val transpose = (Math.abs(applyRotation) + 90) % 180 == 0
+
+            val inWidth = if (transpose) srcHeight else srcWidth
+            val inHeight = if (transpose) srcWidth else srcHeight
+
+            // Apply scaling if necessary.
+            if (inWidth != dstWidth || inHeight != dstHeight) {
+                val scaleFactorX = dstWidth / inWidth.toFloat()
+                val scaleFactorY = dstHeight / inHeight.toFloat()
+
+                if (maintainAspectRatio) {
+                    // Scale by minimum factor so that dst is filled completely while
+                    // maintaining the aspect ratio. Some image may fall off the edge.
+                    val scaleFactor = Math.max(scaleFactorX, scaleFactorY)
+                    matrix.postScale(scaleFactor, scaleFactor)
+                } else {
+                    // Scale exactly to fill dst from src.
+                    matrix.postScale(scaleFactorX, scaleFactorY)
+                }
+            }
+
+
+            // Translate back from origin centered reference to destination frame.
+            matrix.postTranslate(dstWidth / 2.0f, dstHeight / 2.0f)
+
+            return matrix
+        }
+    }
 }
