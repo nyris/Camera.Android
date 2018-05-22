@@ -153,6 +153,7 @@ internal class ImageUtils{
          * cropping the image if necessary.
          * @return The transformation fulfilling the desired requirements.
          */
+        @JvmStatic
         fun getTransformationMatrix(
                 srcWidth: Int,
                 srcHeight: Int,
