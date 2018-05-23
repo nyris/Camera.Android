@@ -109,9 +109,6 @@ abstract class CameraViewImpl {
     void renderInferenceStats(Canvas canvas){
     }
 
-    void setRecognitionListener(IRecognitionListener recognitionHandler){
-    }
-
     Bitmap getPreviewBitmap(int cameraWidth, int cameraHeight) {
         if(mPreview == null)
             return null;
