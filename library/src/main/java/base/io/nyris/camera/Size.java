@@ -23,8 +23,8 @@ import android.support.annotation.NonNull;
  */
 public class Size implements Comparable<Size> {
 
-    private final int mWidth;
-    private final int mHeight;
+    private int mWidth;
+    private int mHeight;
 
     /**
      * Create a new immutable Size instance.
@@ -43,6 +43,14 @@ public class Size implements Comparable<Size> {
 
     public int getHeight() {
         return mHeight;
+    }
+
+    public void setWidth(int width) {
+        mWidth = width;
+    }
+
+    public void setHeight(int height) {
+        mHeight = height;
     }
 
     @Override

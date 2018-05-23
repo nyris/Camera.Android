@@ -228,17 +228,21 @@ public class BaseCameraView extends FrameLayout {
         }
         assert ratio != null;
 
-        Size size;
         if (height < width * ratio.getY() / ratio.getX()) {
-            size = new Size(width, width * ratio.getY() / ratio.getX());
+            mImpl.getView().measure(
+                    MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(width * ratio.getY() / ratio.getX(),
+                            MeasureSpec.EXACTLY));
         } else {
-            size = new Size(height * ratio.getX() / ratio.getY(), height);
+            mImpl.getView().measure(
+                    MeasureSpec.makeMeasureSpec(height * ratio.getX() / ratio.getY(),
+                            MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
         }
+    }
 
-        mImpl.getView().measure(
-                MeasureSpec.makeMeasureSpec(size.getWidth(), MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(size.getHeight(),
-                        MeasureSpec.EXACTLY));
+    public Size getSurfaceMeasurement(){
+        return new Size(mImpl.getView().getMeasuredWidth(), mImpl.getView().getMeasuredHeight());
     }
 
     @Override
