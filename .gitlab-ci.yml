@@ -24,9 +24,9 @@ Build:
 Unit Test:
   stage: test
   script:
-    - ./gradlew clean :library:testDevReleaseUnitTest --tests io.nyris.camera*
+    - ./gradlew clean :library:testProdReleaseUnitTest --tests io.nyris.camera*
     - mkdir -p reports/
-    - cp -r library/build/reports/tests/testDevReleaseUnitTest/* reports/
+    - cp -r library/build/reports/tests/testProdReleaseUnitTest/* reports/
   tags:
     - android
   artifacts:
