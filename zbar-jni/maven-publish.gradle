@@ -6,7 +6,7 @@ group='io.nyris'
 version = jniVersion
 
 //TODO: to be removed when bintray fix the issue https://github.com/bintray/gradle-bintray-plugin/issues/199
-project.archivesBaseName = "sdk"
+project.archivesBaseName = "zbar"
 
 install {
     repositories.mavenInstaller {
