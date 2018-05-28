@@ -40,7 +40,8 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    defaultConfig {
+    defaultConfig{
+        testApplicationId "io.nyris.camera.demo.test"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode gitVersionCode

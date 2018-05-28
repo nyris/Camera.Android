@@ -52,3 +52,8 @@
 
 -dontwarn io.nyris.camera.**
 
+-keepclassmembers class net.sourceforge.zbar.ImageScanner { *; }
+-keepclassmembers class net.sourceforge.zbar.Image { *; }
+-keepclassmembers class net.sourceforge.zbar.Symbol { *; }
+-keepclassmembers class net.sourceforge.zbar.SymbolSet { *; }
+
