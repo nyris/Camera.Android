@@ -25,6 +25,9 @@ allprojects {
     repositories {
         google()
         jcenter()
+        flatDir {
+            dirs '../library/src/dev/libs'
+        }
     }
 }
 
@@ -36,7 +39,7 @@ ext {
     //Tools
     buildToolsVersion = '27.0.3'
     compileSdkVersion = 27
-    minSdkVersion = 14
+    minSdkVersion = 16
     targetSdkVersion = 27
 
     //Support
