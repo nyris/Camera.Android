@@ -30,7 +30,8 @@
         app:autoFocus="true"
         app:saveImage="true"
         app:imageWidth="512"
-        app:imageHeight="512"/>
+        app:imageHeight="512"
+        app:recognition="barcode"/>
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"

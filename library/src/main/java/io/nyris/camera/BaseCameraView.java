@@ -489,7 +489,16 @@ public class BaseCameraView extends FrameLayout implements LifecycleObserver {
     public void enableBarcode(boolean isEnabled) {
         if(!(mImpl instanceof IBarcodeCamera)){
             final PreviewImpl preview = createPreviewImpl(getContext(), isEnabled);
-            CameraViewImpl cameraViewImpl = new Camera1ZBar(mCallbacks, preview);
+            CameraViewImpl cameraViewImpl;
+
+            if (Build.VERSION.SDK_INT < 21) {
+                cameraViewImpl = new Camera1ZBar(mCallbacks, preview);
+            } else if (Build.VERSION.SDK_INT < 23) {
+                cameraViewImpl = new Camera2ZBar(mCallbacks, preview, getContext());
+            } else {
+                cameraViewImpl = new Camera2ZBarApi23(mCallbacks, preview, getContext());
+            }
+
             cameraViewImpl.setFlash(mImpl.getFlash());
             cameraViewImpl.setAutoFocus(mImpl.getAutoFocus());
             cameraViewImpl.setAspectRatio(mImpl.getAspectRatio());

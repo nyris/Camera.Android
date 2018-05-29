@@ -19,6 +19,7 @@
     <string name="aspect_ratio">Aspect ratio</string>
     <string name="switch_flash">Switch flash</string>
     <string name="switch_camera">Switch camera</string>
+    <string name="enable_camera">Enable Barcode reader</string>
     <string name="flash_auto">Flash auto</string>
     <string name="flash_off">Flash off</string>
     <string name="flash_on">Flash on</string>
