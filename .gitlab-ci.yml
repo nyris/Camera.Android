@@ -37,7 +37,6 @@ Publish Libs:
   stage: publish
   script:
     - ./gradlew :library:uploadArchives --stacktrace
-    - ./gradlew :zbar-jni:uploadArchives --stacktrace
   tags:
     - android
   only:
@@ -49,7 +48,6 @@ Publish Libs To Bintray:
   script:
     - export SDK_DEFAULT_PUBLISH_CONFIG=""
     - ./gradlew :library:bintrayUpload --stacktrace
-    - ./gradlew :zbar-jni:bintrayUpload --stacktrace
   tags:
     - android
   when: manual
