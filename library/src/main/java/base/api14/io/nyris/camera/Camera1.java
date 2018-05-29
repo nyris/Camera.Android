@@ -37,12 +37,14 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import timber.log.Timber;
+
 
 @SuppressWarnings("deprecation")
 class Camera1 extends CameraViewImpl {
-    protected static final int INVALID_CAMERA_ID = -1;
+    private static final int INVALID_CAMERA_ID = -1;
 
-    protected static final SparseArrayCompat<String> FLASH_MODES = new SparseArrayCompat<>();
+    private static final SparseArrayCompat<String> FLASH_MODES = new SparseArrayCompat<>();
 
     static {
         FLASH_MODES.put(Constants.FLASH_OFF, Camera.Parameters.FLASH_MODE_OFF);
@@ -52,37 +54,39 @@ class Camera1 extends CameraViewImpl {
         FLASH_MODES.put(Constants.FLASH_RED_EYE, Camera.Parameters.FLASH_MODE_RED_EYE);
     }
 
-    protected int mCameraId;
+    private int mCameraId;
 
-    protected final AtomicBoolean isPictureCaptureInProgress = new AtomicBoolean(false);
+    private final AtomicBoolean isPictureCaptureInProgress = new AtomicBoolean(false);
 
     protected Camera mCamera;
 
-    protected Camera.Parameters mCameraParameters;
+    private Camera.Parameters mCameraParameters;
 
-    protected final Camera.CameraInfo mCameraInfo = new Camera.CameraInfo();
+    private final Camera.CameraInfo mCameraInfo = new Camera.CameraInfo();
 
-    protected final SizeMap mPreviewSizes = new SizeMap();
+    private final SizeMap mPreviewSizes = new SizeMap();
 
-    protected final SizeMap mPictureSizes = new SizeMap();
+    private final SizeMap mPictureSizes = new SizeMap();
 
-    protected AspectRatio mAspectRatio;
+    private AspectRatio mAspectRatio;
 
     protected boolean mShowingPreview;
 
-    protected boolean mAutoFocus;
+    private boolean mAutoFocus;
 
-    protected int mFacing;
+    private int mFacing;
 
-    protected int mFlash;
+    private int mFlash;
 
-    protected int mDisplayOrientation;
+    private int mDisplayOrientation;
 
-    protected Handler mHandler;
+    private Handler mHandler;
 
-    protected Camera.AutoFocusCallback mAutofocusCallback;
+    private Camera.AutoFocusCallback mAutofocusCallback;
 
-    protected int mCameraRotation;
+    private int mCameraRotation;
+
+    private final String tag = Camera1.class.getName();
 
     Camera1(Callback callback, PreviewImpl preview) {
         super(callback, preview);
@@ -131,7 +135,7 @@ class Camera1 extends CameraViewImpl {
 
     // Suppresses Camera#setPreviewTexture
     @SuppressLint("NewApi")
-    protected void setUpPreview() {
+    private void setUpPreview() {
         try {
             if (mPreview.getOutputClass() == SurfaceHolder.class) {
                 final boolean needsToStopPreview = mShowingPreview && Build.VERSION.SDK_INT < 14;
@@ -147,6 +151,7 @@ class Camera1 extends CameraViewImpl {
             }
         } catch (IOException e) {
             mCallback.onError(e.getMessage());
+            Timber.e(tag, e.getMessage());
         }
     }
 
@@ -247,6 +252,8 @@ class Camera1 extends CameraViewImpl {
             if(mCallback!= null)
                 mCallback.onError(
                         "Camera is not ready. Call start() before takePicture().");
+
+            Timber.e(tag, "Camera is not ready. Call start() before takePicture().");
             return;
         }
         if (getAutoFocus()) {
@@ -257,7 +264,7 @@ class Camera1 extends CameraViewImpl {
         }
     }
 
-    protected void takePictureInternal() {
+    private void takePictureInternal() {
         if (!isPictureCaptureInProgress.getAndSet(true)) {
             mCamera.takePicture(null, null, null, (data, camera) -> {
                 isPictureCaptureInProgress.set(false);
@@ -294,7 +301,7 @@ class Camera1 extends CameraViewImpl {
     /**
      * This rewrites {@link #mCameraId} and {@link #mCameraInfo}.
      */
-    protected void chooseCamera() {
+    private void chooseCamera() {
         for (int i = 0, count = Camera.getNumberOfCameras(); i < count; i++) {
             Camera.getCameraInfo(i, mCameraInfo);
             if (mCameraInfo.facing == mFacing) {
@@ -305,7 +312,7 @@ class Camera1 extends CameraViewImpl {
         mCameraId = INVALID_CAMERA_ID;
     }
 
-    protected void openCamera() {
+    private void openCamera() {
         if (mCamera != null) {
             releaseCamera();
         }
@@ -331,7 +338,7 @@ class Camera1 extends CameraViewImpl {
         mCallback.onCameraOpened();
     }
 
-    protected AspectRatio chooseAspectRatio() {
+    private AspectRatio chooseAspectRatio() {
         AspectRatio r = null;
         for (AspectRatio ratio : mPreviewSizes.ratios()) {
             r = ratio;
@@ -368,7 +375,7 @@ class Camera1 extends CameraViewImpl {
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
-    protected Size chooseOptimalSize(SortedSet<Size> sizes) {
+    private Size chooseOptimalSize(SortedSet<Size> sizes) {
         if (!mPreview.isReady()) { // Not yet laid out
             return sizes.first(); // Return the smallest size
         }
@@ -394,7 +401,7 @@ class Camera1 extends CameraViewImpl {
         return result;
     }
 
-    protected void releaseCamera() {
+    private void releaseCamera() {
         if (mCamera != null) {
             mCamera.setOneShotPreviewCallback(null);
             mCamera.setPreviewCallback(null);
@@ -404,7 +411,7 @@ class Camera1 extends CameraViewImpl {
         }
     }
 
-    protected int calcDisplayOrientation(int rotation) {
+    private int calcDisplayOrientation(int rotation) {
         if (mCameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
             return (360 - (mCameraInfo.orientation + rotation) % 360) % 360;
         } else {  // back-facing
@@ -423,7 +430,7 @@ class Camera1 extends CameraViewImpl {
      * @param screenOrientationDegrees Screen orientation in degrees
      * @return Number of degrees to rotate image in order for it to view correctly.
      */
-    protected int calcCameraRotation(int screenOrientationDegrees) {
+    private int calcCameraRotation(int screenOrientationDegrees) {
         if (mCameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
             return (mCameraInfo.orientation + screenOrientationDegrees) % 360;
         } else {  // back-facing
@@ -438,7 +445,7 @@ class Camera1 extends CameraViewImpl {
      * @param orientationDegrees Orientation in degrees (0,90,180,270)
      * @return True if in landscape, false if portrait
      */
-    protected boolean isLandscape(int orientationDegrees) {
+    private boolean isLandscape(int orientationDegrees) {
         return (orientationDegrees == Constants.LANDSCAPE_90 ||
                 orientationDegrees == Constants.LANDSCAPE_270);
     }
@@ -447,7 +454,7 @@ class Camera1 extends CameraViewImpl {
     /**
      * @return {@code true} if {@link #mCameraParameters} was modified.
      */
-    protected boolean setAutoFocusInternal(boolean autoFocus) {
+    private boolean setAutoFocusInternal(boolean autoFocus) {
         mAutoFocus = autoFocus;
         if (isCameraOpened()) {
             final List<String> modes = mCameraParameters.getSupportedFocusModes();
@@ -473,7 +480,7 @@ class Camera1 extends CameraViewImpl {
 
     @SuppressLint("ClickableViewAccessibility")
     @TargetApi(14)
-    protected void attachFocusTapListener() {
+    private void attachFocusTapListener() {
         mPreview.getView().setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_UP) {
                 if (mCamera != null) {
@@ -522,7 +529,7 @@ class Camera1 extends CameraViewImpl {
     }
 
     @TargetApi(14)
-    protected void resetFocus(final boolean success, final Camera camera) {
+    private void resetFocus(final boolean success, final Camera camera) {
         mHandler.removeCallbacksAndMessages(null);
         mHandler.postDelayed(() -> {
             if (camera != null) {
@@ -542,7 +549,7 @@ class Camera1 extends CameraViewImpl {
         }, DELAY_MILLIS_BEFORE_RESETTING_FOCUS);
     }
 
-    protected Rect calculateFocusArea(float x, float y) {
+    private Rect calculateFocusArea(float x, float y) {
         int buffer = getFocusAreaSize() / 2;
         int centerX = calculateCenter(x, mPreview.getView().getWidth(), buffer);
         int centerY = calculateCenter(y, mPreview.getView().getHeight(), buffer);
@@ -554,7 +561,7 @@ class Camera1 extends CameraViewImpl {
         );
     }
 
-    protected int calculateCenter(float coord, int dimen, int buffer) {
+    private int calculateCenter(float coord, int dimen, int buffer) {
         int normalized = (int) ((coord / dimen) * 2000 - 1000);
         if (Math.abs(normalized) + buffer > 1000) {
             if (normalized > 0) {
@@ -570,7 +577,7 @@ class Camera1 extends CameraViewImpl {
     /**
      * @return {@code true} if {@link #mCameraParameters} was modified.
      */
-    protected boolean setFlashInternal(int flash) {
+    private boolean setFlashInternal(int flash) {
         if (isCameraOpened()) {
             List<String> modes = mCameraParameters.getSupportedFlashModes();
             String mode = FLASH_MODES.get(flash);

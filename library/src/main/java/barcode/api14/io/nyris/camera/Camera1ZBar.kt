@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package io.nyris.camera
 
 import android.hardware.Camera

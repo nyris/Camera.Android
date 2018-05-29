@@ -15,13 +15,9 @@ import java.util.ArrayList
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
 class CameraView : BaseCameraView {
-    constructor(context: Context) : this(context, null) {
-        Log.i("","")
-    }
+    constructor(context: Context) : this(context, null)
 
-    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0) {
-        Log.i("","")
-    }
+    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
 
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
         if (isInEditMode) {

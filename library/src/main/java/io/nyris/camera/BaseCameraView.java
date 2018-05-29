@@ -18,9 +18,14 @@ package io.nyris.camera;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.LifecycleObserver;
+import android.arch.lifecycle.OnLifecycleEvent;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntDef;
@@ -39,7 +44,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Set;
 
-public class BaseCameraView extends FrameLayout {
+public class BaseCameraView extends FrameLayout implements LifecycleObserver {
 
     /** The camera device faces the opposite direction as the device's screen. */
     public static final int FACING_BACK = Constants.FACING_BACK;
@@ -273,8 +278,14 @@ public class BaseCameraView extends FrameLayout {
      * Open a camera device and start showing camera preview. This is typically called from
      * {@link Activity#onResume()}.
      */
+    private Handler handler;
+    private HandlerThread handlerThread;
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     public void start() {
         isTakeScreenshot = false;
+        handlerThread = new HandlerThread("CameraLifeCycleThread");
+        handlerThread.start();
+        handler = new Handler(handlerThread.getLooper());
         try {
             if (!mImpl.start()) {
                 Parcelable state=onSaveInstanceState();
@@ -295,8 +306,24 @@ public class BaseCameraView extends FrameLayout {
      * Stop camera preview and close the device. This is typically called from
      * {@link Activity#onPause()}.
      */
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     public void stop() {
-        mImpl.stop();
+        if(handler== null)
+            return;
+
+        handler.post(()-> {
+            mImpl.stop();
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    handlerThread.quitSafely();
+                }
+                handlerThread = null;
+                handler = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     /**
