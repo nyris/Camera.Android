@@ -11,7 +11,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 
 /**
- *
+ * ImageUtils.kt - class that containing image processing helpers.
  *
  * @author Sidali Mellouk
  * Created by nyris GmbH

@@ -8,7 +8,8 @@ import net.sourceforge.zbar.ImageScanner
 import java.nio.charset.StandardCharsets
 
 /**
- *
+ * Camera1ZBar.kt - class that use Camera API 1 to detect barcode using ZBAR
+ * Target API below level 14
  *
  * @author Sidali Mellouk
  * Created by nyris GmbH

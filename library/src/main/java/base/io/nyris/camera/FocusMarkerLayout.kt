@@ -10,7 +10,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 
 /**
- *
+ * FocusMarkerLayout.kt - layout class for showing marker when user tap to use manual focus
  *
  * @author Sidali Mellouk
  * Created by nyris GmbH

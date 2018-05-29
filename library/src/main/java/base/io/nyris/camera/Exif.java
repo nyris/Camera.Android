@@ -3,7 +3,11 @@ package io.nyris.camera;
 import android.util.Log;
 
 /**
- * Created by smellouk on 10/08/2017.
+ * Exif.kt - class helper to extract exit information from bytes
+ *
+ * @author Sidali Mellouk
+ * Created by nyris GmbH
+ * Copyright © 2018 nyris GmbH. All rights reserved.
  */
 
 class Exif {

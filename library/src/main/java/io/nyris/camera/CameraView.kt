@@ -8,7 +8,7 @@ import android.util.Log
 import java.util.ArrayList
 
 /**
- *
+ * CameraView.kt - Class view that extend BaseCameraView for targeting recognition based styleable parameters
  *
  * @author Sidali Mellouk
  * Created by nyris GmbH

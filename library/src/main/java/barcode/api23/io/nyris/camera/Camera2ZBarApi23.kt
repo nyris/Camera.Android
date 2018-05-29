@@ -6,7 +6,8 @@ import android.graphics.ImageFormat
 import android.hardware.camera2.params.StreamConfigurationMap
 
 /**
- *
+ * Camera2ZBarApi23.kt - class that use Camera API 2 to detect barcode using ZBAR
+ * Target API above level 23
  *
  * @author Sidali Mellouk
  * Created by nyris GmbH

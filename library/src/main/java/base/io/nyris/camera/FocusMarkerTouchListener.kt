@@ -3,7 +3,7 @@ package io.nyris.camera
 import android.view.View
 
 /**
- *
+ * FocusMarkerTouchListener.kt - Focus listener triggered when user tap one the CameraView
  *
  * @author Sidali Mellouk
  * Created by nyris GmbH

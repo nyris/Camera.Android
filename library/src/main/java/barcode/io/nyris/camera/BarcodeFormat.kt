@@ -5,7 +5,7 @@ import java.io.Serializable
 import java.util.ArrayList
 
 /**
- *
+ * BarcodeFormat.kt - Class that contain barcode format
  *
  * @author Sidali Mellouk
  * Created by nyris GmbH

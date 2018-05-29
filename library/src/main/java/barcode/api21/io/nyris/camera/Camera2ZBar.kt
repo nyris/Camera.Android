@@ -16,7 +16,8 @@ import java.util.*
 
 
 /**
- *
+ * Camera2ZBar.kt - class that use Camera API 2 to detect barcode using ZBAR
+ * Target API between level 14 and 21
  *
  * @author Sidali Mellouk
  * Created by nyris GmbH

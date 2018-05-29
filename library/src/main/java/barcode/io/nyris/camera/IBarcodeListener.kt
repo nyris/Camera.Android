@@ -1,7 +1,7 @@
 package io.nyris.camera
 
 /**
- *
+ * IBarcodeListener.kt - Barcode listener triggered when there are barcode
  *
  * @author Sidali Mellouk
  * Created by nyris GmbH

@@ -575,7 +575,7 @@ public class BaseCameraView extends FrameLayout {
             }
 
             if (isSaveImage) {
-                new ImageSavingTask(getContext(), image).execute();
+                new SavingImageTask(getContext(), image).execute();
             }
 
             byte[] transformedData = ImageUtils.Companion.resize(getContext(), image, takenPictureWidth, takenPictureHeight);

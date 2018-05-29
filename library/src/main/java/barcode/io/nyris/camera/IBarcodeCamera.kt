@@ -1,7 +1,7 @@
 package io.nyris.camera
 
 /**
- *
+ * IBarcodeCamera.kt - interface class to implement Barcode Camera
  *
  * @author Sidali Mellouk
  * Created by nyris GmbH
