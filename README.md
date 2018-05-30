@@ -1,7 +1,6 @@
 # nyris Camera View for Android
-==========
 
-Forked from [this](https://github.com/google/cameraview) repo.
+This project is a from of the [google/cameraview](https://github.com/google/cameraview) repo.
 
 ![](nyris_logo.png)
 
