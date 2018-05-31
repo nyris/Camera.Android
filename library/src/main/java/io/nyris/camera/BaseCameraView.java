@@ -326,6 +326,12 @@ public class BaseCameraView extends FrameLayout implements LifecycleObserver {
         });
     }
 
+    public void stopPreview(){
+        if(mImpl== null)
+            return;
+        mImpl.stopPreview();
+    }
+
     /**
      * @return {@code true} if the camera is opened.
      */
