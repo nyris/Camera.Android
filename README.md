@@ -9,7 +9,7 @@ Introduction
 nyris is a high performance visual product search, object detection and visual recommendations engine
 for retail and industry.
 
-For more information please see [nyris.io](https://nyris.io/)
+For more information please see [nyris.io](https://nyris.io/).
 
 We provide a new Camera library that that full image requirements for our matching engine.
 The SDK is written in [Kotlin](https://kotlinlang.org/) and [Java](https://docs.oracle.com/javase/8/docs/technotes/guides/language/index.html).
