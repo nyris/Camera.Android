@@ -690,36 +690,38 @@ class Camera2 extends CameraViewImpl {
     @SuppressLint("ClickableViewAccessibility")
     private void attachFocusTapListener() {
         mPreview.getView().setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                if (mCamera != null) {
-                    Rect rect = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-                    if (rect == null) return true;
-                    int areaSize = getFocusAreaSize();
-                    int right = rect.right;
-                    int bottom = rect.bottom;
-                    int viewWidth = mPreview.getView().getWidth();
-                    int viewHeight = mPreview.getView().getHeight();
-                    int ll, rr;
-                    Rect newRect;
-                    int centerX = (int) event.getX();
-                    int centerY = (int) event.getY();
-                    ll = ((centerX * right) - areaSize) / viewWidth;
-                    rr = ((centerY * bottom) - areaSize) / viewHeight;
-                    int focusLeft = clamp(ll, 0, right);
-                    int focusBottom = clamp(rr, 0, bottom);
-                    newRect = new Rect(focusLeft, focusBottom, focusLeft + areaSize, focusBottom + areaSize);
-                    MeteringRectangle meteringRectangle = new MeteringRectangle(newRect, getFocusMeteringAreaWeight());
-                    MeteringRectangle[] meteringRectangleArr = {meteringRectangle};
+            if (event.getAction() != MotionEvent.ACTION_UP)
+                return false;
 
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, meteringRectangleArr);
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, meteringRectangleArr);
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, CameraMetadata.CONTROL_AE_PRECAPTURE_TRIGGER_START);
+            if (mCamera == null)
+                return false;
 
-                    updatePreview();
-                }
-            }
+            Rect rect = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+            if (rect == null) return true;
+            int areaSize = getFocusAreaSize();
+            int right = rect.right;
+            int bottom = rect.bottom;
+            int viewWidth = mPreview.getView().getWidth();
+            int viewHeight = mPreview.getView().getHeight();
+            int ll, rr;
+            Rect newRect;
+            int centerX = (int) event.getX();
+            int centerY = (int) event.getY();
+            ll = ((centerX * right) - areaSize) / viewWidth;
+            rr = ((centerY * bottom) - areaSize) / viewHeight;
+            int focusLeft = clamp(ll, 0, right);
+            int focusBottom = clamp(rr, 0, bottom);
+            newRect = new Rect(focusLeft, focusBottom, focusLeft + areaSize, focusBottom + areaSize);
+            MeteringRectangle meteringRectangle = new MeteringRectangle(newRect, getFocusMeteringAreaWeight());
+            MeteringRectangle[] meteringRectangleArr = {meteringRectangle};
+
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, meteringRectangleArr);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, meteringRectangleArr);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, CameraMetadata.CONTROL_AE_PRECAPTURE_TRIGGER_START);
+
+            updatePreview();
             return true;
         });
     }
