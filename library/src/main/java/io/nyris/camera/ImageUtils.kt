@@ -17,7 +17,7 @@ import java.io.File
  * Created by nyris GmbH
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
-internal class ImageUtils{
+class ImageUtils{
     companion object {
         init {
             try {
