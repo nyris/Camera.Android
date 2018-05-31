@@ -687,8 +687,6 @@ class Camera2 extends CameraViewImpl {
         }
     }
 
-
-
     @SuppressLint("ClickableViewAccessibility")
     private void attachFocusTapListener() {
         mPreview.getView().setOnTouchListener((v, event) -> {
