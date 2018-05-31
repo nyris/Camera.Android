@@ -86,7 +86,7 @@ internal open class Camera2ZBar(callback : Callback?, preview : PreviewImpl, con
                 val barcode = net.sourceforge.zbar.Image(reader.width, reader.height, "Y800")
                 barcode.data = bytes
                 val result = scanner.scanImage(barcode)
-                if (result == 0) {
+                if (result <= 0) {
                     image.close()
                     return@post
                 }

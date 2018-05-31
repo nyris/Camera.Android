@@ -60,7 +60,7 @@ internal class Camera1ZBar(callback: CameraViewImpl.Callback?, preview: PreviewI
             barcode.data = data
 
             val result = scanner.scanImage(barcode)
-            if(result == 0)
+            if(result <= 0)
                 return@Runnable
 
             val syms = scanner.results
