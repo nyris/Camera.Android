@@ -14,7 +14,7 @@ For more information please see [nyris.io](https://nyris.io/).
 We provide a new Camera library that provide full image requirements for our matching engine.
 The SDK is written in [Kotlin](https://kotlinlang.org/) and [Java](https://docs.oracle.com/javase/8/docs/technotes/guides/language/index.html).
 
-Requires API Level 14. The library uses Camera 1 API on API Level 14-20 and Camera2 on 21 and above.
+It requires API Level 14. The library uses Camera 1 API on API Level 14-20 and Camera2 on 21 and above.
 
 | API Level | Camera API | Preview View |
 |:---------:|------------|--------------|
