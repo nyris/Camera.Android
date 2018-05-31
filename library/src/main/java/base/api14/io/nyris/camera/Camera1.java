@@ -482,46 +482,47 @@ class Camera1 extends CameraViewImpl {
     @TargetApi(14)
     private void attachFocusTapListener() {
         mPreview.getView().setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                if (mCamera != null) {
-                    Camera.Parameters parameters = mCamera.getParameters();
-                    String focusMode = parameters.getFocusMode();
-                    Rect rect = calculateFocusArea(event.getX(), event.getY());
-                    List<Camera.Area> meteringAreas = new ArrayList<>();
-                    meteringAreas.add(new Camera.Area(rect, getFocusMeteringAreaWeight()));
-                    if (parameters.getMaxNumFocusAreas() != 0 && focusMode != null &&
-                            (focusMode.equals(Camera.Parameters.FOCUS_MODE_AUTO) ||
-                                    focusMode.equals(Camera.Parameters.FOCUS_MODE_MACRO) ||
-                                    focusMode.equals(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE) ||
-                                    focusMode.equals(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
-                            ) {
-                        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-                        parameters.setFocusAreas(meteringAreas);
-                        if (parameters.getMaxNumMeteringAreas() > 0) {
-                            parameters.setMeteringAreas(meteringAreas);
-                        }
-                        if(!parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
-                            return false; //cannot autoFocus
-                        }
-                        mCamera.setParameters(parameters);
-                        mCamera.autoFocus(this::resetFocus);
-                    } else if (parameters.getMaxNumMeteringAreas() > 0) {
-                        if(!parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
-                            return false; //cannot autoFocus
-                        }
-                        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-                        parameters.setFocusAreas(meteringAreas);
+            if(event.getAction() != MotionEvent.ACTION_UP)
+                return false;
+            
+            if (mCamera != null) {
+                Camera.Parameters parameters = mCamera.getParameters();
+                String focusMode = parameters.getFocusMode();
+                Rect rect = calculateFocusArea(event.getX(), event.getY());
+                List<Camera.Area> meteringAreas = new ArrayList<>();
+                meteringAreas.add(new Camera.Area(rect, getFocusMeteringAreaWeight()));
+                if (parameters.getMaxNumFocusAreas() != 0 && focusMode != null &&
+                        (focusMode.equals(Camera.Parameters.FOCUS_MODE_AUTO) ||
+                                focusMode.equals(Camera.Parameters.FOCUS_MODE_MACRO) ||
+                                focusMode.equals(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE) ||
+                                focusMode.equals(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
+                        ) {
+                    parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+                    parameters.setFocusAreas(meteringAreas);
+                    if (parameters.getMaxNumMeteringAreas() > 0) {
                         parameters.setMeteringAreas(meteringAreas);
-
-                        mCamera.setParameters(parameters);
-                        mCamera.autoFocus(this::resetFocus);
-                    } else {
-                        mCamera.autoFocus((success, camera) -> {
-                            if (mAutofocusCallback != null) {
-                                mAutofocusCallback.onAutoFocus(success, camera);
-                            }
-                        });
                     }
+                    if(!parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+                        return false; //cannot autoFocus
+                    }
+                    mCamera.setParameters(parameters);
+                    mCamera.autoFocus(this::resetFocus);
+                } else if (parameters.getMaxNumMeteringAreas() > 0) {
+                    if(!parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+                        return false; //cannot autoFocus
+                    }
+                    parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+                    parameters.setFocusAreas(meteringAreas);
+                    parameters.setMeteringAreas(meteringAreas);
+
+                    mCamera.setParameters(parameters);
+                    mCamera.autoFocus(this::resetFocus);
+                } else {
+                    mCamera.autoFocus((success, camera) -> {
+                        if (mAutofocusCallback != null) {
+                            mAutofocusCallback.onAutoFocus(success, camera);
+                        }
+                    });
                 }
             }
             return true;
