@@ -199,7 +199,8 @@ public class MainActivity extends AppCompatActivity implements
                     mCameraView.stop();
                     mCameraView.enableBarcode(true);
                     mCameraView.addBarcodeListener(barcode -> {
-                        runOnUiThread(()-> Toast.makeText(MainActivity.this,"Barcode :" +barcode.getContents(), Toast.LENGTH_SHORT).show());
+                        runOnUiThread(()-> Toast.makeText(MainActivity.this,"Barcode :" +
+                                barcode.getContents(), Toast.LENGTH_SHORT).show());
                     });
                     mCameraView.start();
                 }
