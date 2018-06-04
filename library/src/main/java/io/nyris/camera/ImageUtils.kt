@@ -51,9 +51,7 @@ class ImageUtils{
             bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
 
             // calculate the new image size preserving the aspect ratio
-            val originalHeight = bitmap.height
-            val originalWidth = bitmap.width
-            val proportionalScaleSize = calculateImageSizePreservingAspectRatio(context, Size(width, height), originalWidth, originalHeight)
+            val proportionalScaleSize = calculateImageSizePreservingAspectRatio(context, Size(width, height), bitmap.width, bitmap.height)
             val scaledImage = Bitmap.createScaledBitmap(bitmap, proportionalScaleSize.width, proportionalScaleSize.height, true)
 
             return compressAndTransformToBytes(scaledImage)
