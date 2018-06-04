@@ -709,8 +709,8 @@ class Camera2 extends CameraViewImpl {
             int centerY = (int) event.getY();
             ll = ((centerX * right) - areaSize) / viewWidth;
             rr = ((centerY * bottom) - areaSize) / viewHeight;
-            int focusLeft = clamp(ll, 0, right);
-            int focusBottom = clamp(rr, 0, bottom);
+            int focusLeft = Math.min(right, Math.max(0, ll));
+            int focusBottom = Math.min(bottom, Math.max(0, rr));
             newRect = new Rect(focusLeft, focusBottom, focusLeft + areaSize, focusBottom + areaSize);
             MeteringRectangle meteringRectangle = new MeteringRectangle(newRect, getFocusMeteringAreaWeight());
             MeteringRectangle[] meteringRectangleArr = {meteringRectangle};
@@ -724,17 +724,6 @@ class Camera2 extends CameraViewImpl {
             updatePreview();
             return true;
         });
-    }
-
-    @Contract(pure = true)
-    private int clamp(int x, int min, int max) {
-        if (x < min) {
-            return min;
-        } else if (x > max) {
-            return max;
-        } else {
-            return x;
-        }
     }
 
     private void updatePreview() {
