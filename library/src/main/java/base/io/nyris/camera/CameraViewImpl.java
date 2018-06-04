@@ -126,7 +126,7 @@ abstract class CameraViewImpl {
                 Canvas c = new Canvas(screenShotPreviewBmp);
                 surfaceView.draw(c);
             }
-            screenShotPreviewBmp=Bitmap.createBitmap(screenShotPreviewBmp, 0,0,cameraWidth, cameraHeight);
+            screenShotPreviewBmp = Bitmap.createBitmap(screenShotPreviewBmp,0,0,cameraWidth, cameraHeight);
         }
         catch (Exception e){
             e.printStackTrace();
