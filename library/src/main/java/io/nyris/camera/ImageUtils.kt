@@ -57,6 +57,13 @@ class ImageUtils{
             return compressAndTransformToBytes(scaledImage)
         }
 
+        fun resize(context: Context, bitmap: Bitmap, width: Int, height: Int): Bitmap {
+            val originalHeight = bitmap.height
+            val originalWidth = bitmap.width
+            val proportionalScaleSize = calculateImageSizePreservingAspectRatio(context, Size(width, height), originalWidth, originalHeight)
+            return Bitmap.createScaledBitmap(bitmap, proportionalScaleSize.width, proportionalScaleSize.height, true)
+        }
+
         fun compressAndTransformToBytes(scaledDownImage: Bitmap): ByteArray {
             val stream = ByteArrayOutputStream()
             scaledDownImage.compress(Bitmap.CompressFormat.JPEG, 100, stream)
