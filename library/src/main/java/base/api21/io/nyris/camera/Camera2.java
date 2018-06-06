@@ -701,12 +701,12 @@ class Camera2 extends CameraViewImpl {
             int bottom = rect.bottom;
             int viewWidth = mPreview.getView().getWidth();
             int viewHeight = mPreview.getView().getHeight();
-            int ll, rr;
+
             Rect newRect;
             int centerX = (int) event.getX();
             int centerY = (int) event.getY();
-            ll = ((centerX * right) - areaSize) / viewWidth;
-            rr = ((centerY * bottom) - areaSize) / viewHeight;
+            int ll = ((centerX * right) - areaSize) / viewWidth;
+            int rr = ((centerY * bottom) - areaSize) / viewHeight;
             int focusLeft = Math.min(right, Math.max(0, ll));
             int focusBottom = Math.min(bottom, Math.max(0, rr));
             newRect = new Rect(focusLeft, focusBottom, focusLeft + areaSize, focusBottom + areaSize);
