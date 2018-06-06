@@ -35,7 +35,7 @@ open class ImageUtils {
             matrix.setRotate(Exif.getOrientation(image))
             val bmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
             val stream = ByteArrayOutputStream()
-            bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            bmp.compress(Bitmap.CompressFormat.JPEG, 90, stream)
             return stream.toByteArray()
         }
 
@@ -68,7 +68,7 @@ open class ImageUtils {
 
         fun compressAndTransformToBytes(scaledDownImage: Bitmap): ByteArray {
             val stream = ByteArrayOutputStream()
-            scaledDownImage.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            scaledDownImage.compress(Bitmap.CompressFormat.JPEG, 90, stream)
             return stream.toByteArray()
         }
 
