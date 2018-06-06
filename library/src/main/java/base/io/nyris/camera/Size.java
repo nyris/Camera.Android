@@ -41,12 +41,12 @@ public class Size implements Comparable<Size> {
         return mWidth;
     }
 
-    public int getHeight() {
-        return mHeight;
-    }
-
     public void setWidth(int width) {
         mWidth = width;
+    }
+
+    public int getHeight() {
+        return mHeight;
     }
 
     public void setHeight(int height) {

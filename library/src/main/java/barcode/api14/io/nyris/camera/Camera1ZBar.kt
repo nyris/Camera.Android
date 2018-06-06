@@ -1,4 +1,5 @@
 @file:Suppress("DEPRECATION")
+
 package io.nyris.camera
 
 import android.hardware.Camera
@@ -31,7 +32,7 @@ internal class Camera1ZBar(callback: CameraViewImpl.Callback?, preview: PreviewI
 
     private var scanner: ImageScanner = ImageScanner()
     private val barcodeListeners: MutableList<IBarcodeListener> = mutableListOf()
-    private var isEnableBarcode : Boolean = true
+    private var isEnableBarcode: Boolean = true
 
     init {
         scanner.setConfig(0, Config.X_DENSITY, 3)
@@ -49,7 +50,7 @@ internal class Camera1ZBar(callback: CameraViewImpl.Callback?, preview: PreviewI
     override fun onPreviewFrame(data: ByteArray, camera: Camera) {
         Thread(Runnable {
 
-            if(!isEnableBarcode)
+            if (!isEnableBarcode)
                 return@Runnable
 
             val parameters = camera.parameters
@@ -60,7 +61,7 @@ internal class Camera1ZBar(callback: CameraViewImpl.Callback?, preview: PreviewI
             barcode.data = data
 
             val result = scanner.scanImage(barcode)
-            if(result <= 0)
+            if (result <= 0)
                 return@Runnable
 
             val syms = scanner.results
@@ -96,7 +97,7 @@ internal class Camera1ZBar(callback: CameraViewImpl.Callback?, preview: PreviewI
         }).start()
     }
 
-    override fun adjustCameraParameters(){
+    override fun adjustCameraParameters() {
         super.adjustCameraParameters()
         if (isEnableBarcode) {
             mCamera.setOneShotPreviewCallback(this)

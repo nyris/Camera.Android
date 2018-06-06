@@ -4,9 +4,9 @@
         <!-- The recognition mode. -->
         <attr name="recognition" format="enum">
             <!-- default mode -->
-            <enum name="none" value="0"/>
+            <enum name="none" value="0" />
             <!-- Enabled barcode mode. -->
-            <enum name="barcode" value="1"/>
+            <enum name="barcode" value="1" />
         </attr>
     </declare-styleable>
 </resources>

@@ -51,39 +51,23 @@ class Camera1 extends CameraViewImpl {
         FLASH_MODES.put(Constants.FLASH_RED_EYE, Camera.Parameters.FLASH_MODE_RED_EYE);
     }
 
-    private int mCameraId;
-
     private final AtomicBoolean isPictureCaptureInProgress = new AtomicBoolean(false);
-
-    protected Camera mCamera;
-
-    private Camera.Parameters mCameraParameters;
-
     private final Camera.CameraInfo mCameraInfo = new Camera.CameraInfo();
-
     private final SizeMap mPreviewSizes = new SizeMap();
-
     private final SizeMap mPictureSizes = new SizeMap();
-
-    private AspectRatio mAspectRatio;
-
-    protected boolean mShowingPreview;
-
-    private boolean mAutoFocus;
-
-    private int mFacing;
-
-    private int mFlash;
-
-    private int mDisplayOrientation;
-
-    private Handler mHandler;
-
-    private Camera.AutoFocusCallback mAutofocusCallback;
-
-    private int mCameraRotation;
-
     private final String tag = Camera1.class.getName();
+    protected Camera mCamera;
+    protected boolean mShowingPreview;
+    private int mCameraId;
+    private Camera.Parameters mCameraParameters;
+    private AspectRatio mAspectRatio;
+    private boolean mAutoFocus;
+    private int mFacing;
+    private int mFlash;
+    private int mDisplayOrientation;
+    private Handler mHandler;
+    private Camera.AutoFocusCallback mAutofocusCallback;
+    private int mCameraRotation;
 
     Camera1(Callback callback, PreviewImpl preview) {
         super(callback, preview);
@@ -126,8 +110,8 @@ class Camera1 extends CameraViewImpl {
             if (mCamera != null) {
                 mCamera.stopPreview();
             }
+        } catch (Exception ignore) {
         }
-        catch (Exception ignore){}
     }
 
     // Suppresses Camera#setPreviewTexture
@@ -158,6 +142,11 @@ class Camera1 extends CameraViewImpl {
     }
 
     @Override
+    protected int getFacing() {
+        return mFacing;
+    }
+
+    @Override
     protected void setFacing(int facing) {
         if (mFacing == facing) {
             return;
@@ -167,11 +156,6 @@ class Camera1 extends CameraViewImpl {
             stop();
             start();
         }
-    }
-
-    @Override
-    protected int getFacing() {
-        return mFacing;
     }
 
     @Override
@@ -210,6 +194,15 @@ class Camera1 extends CameraViewImpl {
     }
 
     @Override
+    boolean getAutoFocus() {
+        if (!isCameraOpened()) {
+            return mAutoFocus;
+        }
+        String focusMode = mCameraParameters.getFocusMode();
+        return focusMode != null && focusMode.contains("continuous");
+    }
+
+    @Override
     void setAutoFocus(boolean autoFocus) {
         if (mAutoFocus == autoFocus) {
             return;
@@ -220,12 +213,8 @@ class Camera1 extends CameraViewImpl {
     }
 
     @Override
-    boolean getAutoFocus() {
-        if (!isCameraOpened()) {
-            return mAutoFocus;
-        }
-        String focusMode = mCameraParameters.getFocusMode();
-        return focusMode != null && focusMode.contains("continuous");
+    int getFlash() {
+        return mFlash;
     }
 
     @Override
@@ -239,14 +228,9 @@ class Camera1 extends CameraViewImpl {
     }
 
     @Override
-    int getFlash() {
-        return mFlash;
-    }
-
-    @Override
     void takePicture() {
         if (!isCameraOpened()) {
-            if(mCallback!= null)
+            if (mCallback != null)
                 mCallback.onError(
                         "Camera is not ready. Call start() before takePicture().");
 
@@ -266,7 +250,7 @@ class Camera1 extends CameraViewImpl {
             mCamera.takePicture(null, null, null, (data, camera) -> {
                 isPictureCaptureInProgress.set(false);
                 mCallback.onPictureTaken(data);
-                if(mShowingPreview){
+                if (mShowingPreview) {
                     camera.cancelAutoFocus();
                     camera.startPreview();
                 }
@@ -330,7 +314,7 @@ class Camera1 extends CameraViewImpl {
             mAspectRatio = Constants.DEFAULT_ASPECT_RATIO;
         }
         adjustCameraParameters();
-        mCameraRotation =  calcCameraRotation(mDisplayOrientation);
+        mCameraRotation = calcCameraRotation(mDisplayOrientation);
         mCamera.setDisplayOrientation(mCameraRotation);
         mCallback.onCameraOpened();
     }
@@ -418,10 +402,10 @@ class Camera1 extends CameraViewImpl {
 
     /**
      * Calculate camera rotation
-     *
+     * <p>
      * This calculation is applied to the output JPEG either via Exif Orientation tag
      * or by actually transforming the bitmap. (Determined by vendor camera API implementation)
-     *
+     * <p>
      * Note: This is not the same calculation as the display orientation
      *
      * @param screenOrientationDegrees Screen orientation in degrees
@@ -479,7 +463,7 @@ class Camera1 extends CameraViewImpl {
     @TargetApi(14)
     private void attachFocusTapListener() {
         mPreview.getView().setOnTouchListener((v, event) -> {
-            if(event.getAction() != MotionEvent.ACTION_UP)
+            if (event.getAction() != MotionEvent.ACTION_UP)
                 return false;
 
             if (mCamera != null)
@@ -501,13 +485,13 @@ class Camera1 extends CameraViewImpl {
                 if (parameters.getMaxNumMeteringAreas() > 0) {
                     parameters.setMeteringAreas(meteringAreas);
                 }
-                if(!parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+                if (!parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
                     return false; //cannot autoFocus
                 }
                 mCamera.setParameters(parameters);
                 mCamera.autoFocus(this::resetFocus);
             } else if (parameters.getMaxNumMeteringAreas() > 0) {
-                if(!parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+                if (!parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
                     return false; //cannot autoFocus
                 }
                 parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);

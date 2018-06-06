@@ -15,6 +15,7 @@
  */
 
 package io.nyris.camera;
+
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Matrix;

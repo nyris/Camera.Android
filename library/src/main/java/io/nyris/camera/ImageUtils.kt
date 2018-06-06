@@ -19,7 +19,7 @@ import java.io.File
  * Created by nyris GmbH
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
-open class ImageUtils{
+open class ImageUtils {
     companion object {
         init {
             try {
@@ -29,7 +29,7 @@ open class ImageUtils{
             }
         }
 
-        fun rotateBitmap(image : ByteArray): ByteArray {
+        fun rotateBitmap(image: ByteArray): ByteArray {
             val bitmap = BitmapFactory.decodeByteArray(image, 0, image.size)
             val matrix = Matrix()
             matrix.setRotate(Exif.getOrientation(image))
@@ -109,14 +109,14 @@ open class ImageUtils{
             return state == Environment.MEDIA_MOUNTED
         }
 
-        fun rotateBitmap(bitmap: Bitmap, rotation : Float) : Bitmap{
+        fun rotateBitmap(bitmap: Bitmap, rotation: Float): Bitmap {
             val matrix = Matrix()
             matrix.postRotate(rotation)
             val scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width, bitmap.height, true)
             return Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.width, scaledBitmap.height, matrix, true)
         }
 
-        fun rotateImageFromUri(context : Context, imageUri : Uri) : Bitmap?{
+        fun rotateImageFromUri(context: Context, imageUri: Uri): Bitmap? {
             val exif = ExifInterface(context.contentResolver.openInputStream(imageUri))
             val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
             var captureBmp: Bitmap? = MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri)
@@ -124,8 +124,8 @@ open class ImageUtils{
             return captureBmp
         }
 
-        fun rotateBitmap(bitmap : Bitmap?, @ExifOrientation orientation : Int) : Bitmap?{
-            if(bitmap == null)
+        fun rotateBitmap(bitmap: Bitmap?, @ExifOrientation orientation: Int): Bitmap? {
+            if (bitmap == null)
                 return null
             val matrix = Matrix()
             when (orientation) {
@@ -174,7 +174,7 @@ open class ImageUtils{
          * @param output A pre-allocated array for the ARGB 8:8:8:8 output data.
          */
         @JvmStatic
-        external fun stringFromJNI() : String
+        external fun stringFromJNI(): String
 
         @JvmStatic
         external fun convertYUV420ToARGB8888(
