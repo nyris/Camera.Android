@@ -39,8 +39,6 @@ import android.util.SparseIntArray;
 import android.view.MotionEvent;
 import android.view.Surface;
 
-import org.jetbrains.annotations.Contract;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Set;
@@ -351,8 +349,8 @@ class Camera2 extends CameraViewImpl {
             int internalFacing = INTERNAL_FACINGS.get(mFacing);
             final String[] ids = mCameraManager.getCameraIdList();
             if (ids.length == 0) { // No camera
-                mCallback.onError("No camera available.");
                 Timber.e(tag, "No camera available.");
+                mCallback.onError("No camera available.");
                 return false;
             }
             for (String id : ids) {
@@ -365,8 +363,8 @@ class Camera2 extends CameraViewImpl {
                 }
                 Integer internal = characteristics.get(CameraCharacteristics.LENS_FACING);
                 if (internal == null) {
-                    mCallback.onError("Unexpected state: LENS_FACING null");
                     Timber.e(tag, "Unexpected state: LENS_FACING null");
+                    mCallback.onError("Unexpected state: LENS_FACING null");
                     return false;
                 }
                 if (internal == internalFacing) {
@@ -386,8 +384,8 @@ class Camera2 extends CameraViewImpl {
             }
             Integer internal = mCameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
             if (internal == null) {
-                mCallback.onError("Unexpected state: LENS_FACING null");
                 Timber.e(tag, "Unexpected state: LENS_FACING null");
+                mCallback.onError("Unexpected state: LENS_FACING null");
                 return false;
             }
             for (int i = 0, count = INTERNAL_FACINGS.size(); i < count; i++) {
@@ -414,8 +412,8 @@ class Camera2 extends CameraViewImpl {
         StreamConfigurationMap map = mCameraCharacteristics.get(
                 CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         if (map == null) {
-            mCallback.onError("Failed to get configuration map: " + mCameraId);
             Timber.e(tag, "Failed to get configuration map: %d", mCameraId);
+            mCallback.onError("Failed to get configuration map: " + mCameraId);
             return;
         }
         sensorOrientation = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
@@ -464,8 +462,8 @@ class Camera2 extends CameraViewImpl {
         try {
             mCameraManager.openCamera(mCameraId, mCameraDeviceCallback, null);
         } catch (CameraAccessException e) {
-            mCallback.onError("Failed to open camera: " + mCameraId);
             Timber.e(e, tag, "Failed to open camera: ", mCameraId);
+            mCallback.onError("Failed to open camera: " + mCameraId);
         }
     }
 
@@ -487,8 +485,8 @@ class Camera2 extends CameraViewImpl {
             mCamera.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
                     mSessionCallback, null);
         } catch (CameraAccessException e) {
-            mCallback.onError("Failed to start camera session");
             Timber.e(e, tag, "Failed to open camera: ", mCameraId);
+            mCallback.onError("Failed to start camera session");
         }
     }
 
