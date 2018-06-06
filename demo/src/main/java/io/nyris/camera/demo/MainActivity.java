@@ -41,11 +41,9 @@ import java.util.Objects;
 import java.util.Set;
 
 import io.nyris.camera.AspectRatio;
-import io.nyris.camera.Barcode;
 import io.nyris.camera.BaseCameraView;
 import io.nyris.camera.Callback;
 import io.nyris.camera.CameraView;
-import io.nyris.camera.IBarcodeListener;
 
 
 /**

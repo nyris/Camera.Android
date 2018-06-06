@@ -126,8 +126,8 @@ public class BaseCameraView extends FrameLayout implements LifecycleObserver {
     @SuppressLint("ClickableViewAccessibility")
     void updateFocusMarkerView(final PreviewImpl preview){
         View view = findViewById(R.id.focusMarker);
-        if(view != null)
-            removeView(view);
+        if(view != null) removeView(view);
+
         final FocusMarkerLayout focusMarkerLayout = new FocusMarkerLayout(getContext());
         focusMarkerLayout.setId(R.id.focusMarker);
         addView(focusMarkerLayout);
@@ -139,7 +139,6 @@ public class BaseCameraView extends FrameLayout implements LifecycleObserver {
                 }
                 focusMarkerLayout.focus(motionEvent.getX(), motionEvent.getY());
             }
-
             //preview.getView().dispatchTouchEvent(motionEvent);
             return true;
         });

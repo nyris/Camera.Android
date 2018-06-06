@@ -8,12 +8,9 @@ import android.net.Uri
 import android.os.Environment
 import android.preference.PreferenceManager
 import android.provider.MediaStore
-import android.support.annotation.IntDef
 import android.support.media.ExifInterface
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
 
 /**
  * ImageUtils.kt - class that containing image processing helpers.

@@ -18,17 +18,14 @@ package io.nyris.camera;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Handler;
 import android.support.v4.util.SparseArrayCompat;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
-import android.view.View;
 
 import java.io.IOException;
 import java.util.ArrayList;

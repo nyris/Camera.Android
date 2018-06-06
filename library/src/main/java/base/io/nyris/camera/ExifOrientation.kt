@@ -2,8 +2,6 @@ package io.nyris.camera
 
 import android.support.annotation.IntDef
 import android.support.media.ExifInterface
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
 
 /**
  *
