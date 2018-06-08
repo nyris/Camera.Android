@@ -1,0 +1,66 @@
+stages:
+  - build
+  - test
+  - publish
+  - source
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+before_script:
+  - git submodule sync --recursive
+  - git submodule update --init --recursive
+
+Build:
+  stage: build
+  script:
+    - ./gradlew clean build -x test --stacktrace
+  tags:
+    - android
+  only:
+    - master
+    - develop
+
+Unit Test:
+  stage: test
+  script:
+    - ./gradlew clean :library:testProdReleaseUnitTest --tests io.nyris.camera*
+    - mkdir -p reports/
+    - cp -r library/build/reports/tests/testProdReleaseUnitTest/* reports/
+  tags:
+    - android
+  artifacts:
+    paths:
+    - reports/
+
+Publish Libs:
+  stage: publish
+  script:
+    - ./gradlew :library:uploadArchives --stacktrace
+  tags:
+    - android
+  only:
+    - develop
+    - master
+
+Publish Libs To Bintray:
+  stage: publish
+  script:
+    - export SDK_DEFAULT_PUBLISH_CONFIG=""
+    - ./gradlew :library:bintrayUpload --stacktrace
+  tags:
+    - android
+  when: manual
+  only:
+    - master
+
+Push to Github:
+  stage: source
+  script:
+    - git remote add github git@github.com:nyris/Camera.Android.git
+    - git push github master
+  tags:
+    - android
+  when: manual
+  only:
+    - master

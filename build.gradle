@@ -1,20 +1,33 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
+    ext.bintrayVersion = '1.8.0'
+    ext.gradleVersion = '3.1.1'
+    ext.kotlinVersion = '1.2.30'
+    ext.grgitVersion = '2.1.1'
+    ext.dexcountVersion = '0.8.2'
+    ext.githubMavenVersion = '2.0'
     repositories {
         jcenter()
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:$bintrayVersion"
+        classpath "com.github.dcendents:android-maven-gradle-plugin:$githubMavenVersion"
+        classpath "com.android.tools.build:gradle:$gradleVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "org.ajoberstar:grgit:$grgitVersion"
+        classpath "com.getkeepsafe.dexcount:dexcount-gradle-plugin:$dexcountVersion"
     }
 }
 
 allprojects {
     repositories {
+        google()
         jcenter()
+        flatDir {
+            dirs '../library/src/dev/libs'
+        }
     }
 }
 
@@ -23,9 +36,15 @@ task clean(type: Delete) {
 }
 
 ext {
-    buildToolsVersion = '25.0.2'
-    compileSdkVersion = 25
-    minSdkVersion = 9
-    targetSdkVersion = 25
-    supportLibraryVersion = '25.3.1'
+    //Tools
+    buildToolsVersion = '27.0.3'
+    compileSdkVersion = 27
+    minSdkVersion = 16
+    targetSdkVersion = 27
+
+    //Support
+    supportLibraryVersion = '27.1.1'
+
+    //arch lifecycle
+    lifecycleVersion = "1.1.1"
 }

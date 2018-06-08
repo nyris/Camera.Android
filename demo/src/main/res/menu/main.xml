@@ -14,7 +14,6 @@
 <menu
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
     <item
         android:id="@+id/aspect_ratio"
         android:icon="@drawable/ic_aspect_ratio"
@@ -33,4 +32,9 @@
         android:title="@string/switch_camera"
         app:showAsAction="ifRoom"/>
 
+    <item
+        android:id="@+id/enable_barcode"
+        android:icon="@drawable/ic_barcode"
+        android:title="@string/enable_camera"
+        app:showAsAction="ifRoom"/>
 </menu>

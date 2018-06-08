@@ -13,41 +13,117 @@
 // limitations under the License.
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+apply from: 'git-version.gradle'
+apply from: 'maven-publish.gradle'
+
+if (file('src/dev/build.gradle').exists()) {
+    apply from: 'src/dev/build.gradle'
+}
+
+def getDefaultPublishConfig = { ->
+    def publishConfig = System.getenv("SDK_DEFAULT_PUBLISH_CONFIG")
+    if (publishConfig == null || publishConfig.isEmpty())
+        publishConfig = "prodRelease"
+    return publishConfig
+}
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
     defaultConfig {
-        minSdkVersion rootProject.ext.minSdkVersion
+        testApplicationId "io.nyris.camera.demo.test"
+        minSdkVersion 14
         targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode gitVersionCode
+        versionName gitVersionName
         testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
     }
+
     buildTypes {
+        debug {
+            buildConfigField "String", "GIT_COMMIT_HASH", "\"" + gitCommitHash + "\""
+            buildConfigField "String", "SDK_VERSION", "\"" + gitVersionName + "\""
+        }
         release {
-            minifyEnabled false
+            minifyEnabled true
+            buildConfigField "String", "GIT_COMMIT_HASH", "\"" + gitCommitHash + "\""
+            buildConfigField "String", "SDK_VERSION", "\"" + gitVersionName + "\""
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     sourceSets {
-        main.java.srcDirs += 'src/main/base'
-        main.java.srcDirs += 'src/main/api9'
-        main.java.srcDirs += 'src/main/api14'
-        main.java.srcDirs += 'src/main/api21'
-        main.java.srcDirs += 'src/main/api23'
+        dev.java.srcDirs += 'src/dev/java/ai'
+        dev.java.srcDirs += 'src/dev/java/ai/api14'
+        dev.java.srcDirs += 'src/dev/java/ai/api21'
+        dev.java.srcDirs += 'src/dev/java/ai/api23'
+        dev.java.srcDirs += 'src/dev/java/ai/recognizer'
+
+        main.java.srcDirs += 'src/main/java/base'
+        main.java.srcDirs += 'src/main/java/base/api9'
+        main.java.srcDirs += 'src/main/java/base/api14'
+        main.java.srcDirs += 'src/main/java/base/api21'
+        main.java.srcDirs += 'src/main/java/base/api23'
+
+        main.java.srcDirs += 'src/main/java/barcode'
+        main.java.srcDirs += 'src/main/java/barcode/api14'
+        main.java.srcDirs += 'src/main/java/barcode/api21'
+        main.java.srcDirs += 'src/main/java/barcode/api23'
+
+        main.java.srcDirs += 'src/main/java/ai'
+        main.java.srcDirs += 'src/main/java/ai/api14'
+        main.java.srcDirs += 'src/main/java/ai/api21'
+        main.java.srcDirs += 'src/main/java/ai/api23'
+
+        prod.java.srcDirs += 'src/prod/java/ai'
+        prod.java.srcDirs += 'src/prod/java/ai/api14'
+        prod.java.srcDirs += 'src/prod/java/ai/api21'
+        prod.java.srcDirs += 'src/prod/java/ai/api23'
     }
+
+    flavorDimensions 'environment'
+    productFlavors {
+        dev {
+            dimension 'environment'
+        }
+        prod {
+            dimension 'environment'
+        }
+    }
+
+    defaultPublishConfig getDefaultPublishConfig()
+    publishNonDefault true
 }
 
 dependencies {
-    compile "com.android.support:support-annotations:$supportLibraryVersion"
-    compile "com.android.support:support-v4:$supportLibraryVersion"
-
     // Tests
-    testCompile 'junit:junit:4.12'
-    androidTestCompile('com.android.support.test:runner:0.5') {
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation('com.android.support.test:runner:1.0.1') {
         exclude module: 'support-annotations'
     }
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2') {
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.1') {
         exclude module: 'support-annotations'
     }
+
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    //Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+
+    //Support
+    implementation "com.android.support:support-annotations:$supportLibraryVersion"
+    implementation "com.android.support:support-v4:$supportLibraryVersion"
+    implementation "com.android.support:exifinterface:$supportLibraryVersion"
+
+    //Logger
+    implementation 'com.jakewharton.timber:timber:4.7.0'
+    implementation 'org.tensorflow:tensorflow-android:1.3.0'
 }
