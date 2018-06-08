@@ -1,4 +1,7 @@
 # nyris Camera View for Android
+[![Build Status](https://travis-ci.com/nyris/Camera.Android.svg?branch=master)](https://travis-ci.com/nyris/Camera.Android)
+[![Download](https://api.bintray.com/packages/nyris/maven/Camera.Android/images/download.svg) ](https://bintray.com/nyris/maven/Camera.Android/_latestVersion)
+[![Download](https://api.bintray.com/packages/nyris/maven/ZBar.JNI/images/download.svg) ](https://bintray.com/nyris/maven/ZBar.JNI/_latestVersion)
 
 This project is a from of the [google/cameraview](https://github.com/google/cameraview) repo.
 
@@ -46,6 +49,7 @@ repositories {
 
 dependencies {
     implementation 'io.nyris:camera:1.x.x'
+    implementation 'io.nyris:zbarjni:0.10' //Required only if you use barcode mode
     implementation "android.arch.lifecycle:extensions:1.x.x" //Optional
 }
 ```

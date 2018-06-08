@@ -6,7 +6,7 @@ group='io.nyris'
 version = jniVersion
 
 //TODO: to be removed when bintray fix the issue https://github.com/bintray/gradle-bintray-plugin/issues/199
-project.archivesBaseName = "zbar"
+project.archivesBaseName = "zbarjni"
 
 install {
     repositories.mavenInstaller {
@@ -19,7 +19,7 @@ install {
 
             groupId POM_GROUP_ID
             artifactId POM_ARTIFACT_ID_ZBAR
-            version version
+            version jniVersion
 
             licenses {
                 license {
@@ -48,15 +48,15 @@ bintray {
 
     pkg {
         repo = BINTRAY_REPO
-        name = BINTRAY_NAME
+        name = BINTRAY_NAME_ZBAR
         userOrg = BINTRAY_ORG
         licenses = ['LGPL-2.1']
         publicDownloadNumbers = true
 
         version {
-            name = version
+            name = jniVersion
             desc = POM_DESCRIPTION_ZBAR
-            vcsTag = version
+            vcsTag = jniVersion
         }
     }
 }
