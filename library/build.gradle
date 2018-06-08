@@ -19,13 +19,13 @@ apply plugin: 'kotlin-kapt'
 apply from: 'git-version.gradle'
 apply from: 'maven-publish.gradle'
 
-if(file ('src/dev/build.gradle').exists()){
+if (file('src/dev/build.gradle').exists()) {
     apply from: 'src/dev/build.gradle'
 }
 
 def getDefaultPublishConfig = { ->
     def publishConfig = System.getenv("SDK_DEFAULT_PUBLISH_CONFIG")
-    if(publishConfig== null || publishConfig.isEmpty())
+    if (publishConfig == null || publishConfig.isEmpty())
         publishConfig = "prodRelease"
     return publishConfig
 }
@@ -39,7 +39,7 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    defaultConfig{
+    defaultConfig {
         testApplicationId "io.nyris.camera.demo.test"
         minSdkVersion 14
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -50,13 +50,13 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField "String", "GIT_COMMIT_HASH", "\""+gitCommitHash+"\""
-            buildConfigField "String", "SDK_VERSION", "\""+gitVersionName+"\""
+            buildConfigField "String", "GIT_COMMIT_HASH", "\"" + gitCommitHash + "\""
+            buildConfigField "String", "SDK_VERSION", "\"" + gitVersionName + "\""
         }
         release {
             minifyEnabled true
-            buildConfigField "String", "GIT_COMMIT_HASH", "\""+gitCommitHash+"\""
-            buildConfigField "String", "SDK_VERSION", "\""+gitVersionName+"\""
+            buildConfigField "String", "GIT_COMMIT_HASH", "\"" + gitCommitHash + "\""
+            buildConfigField "String", "SDK_VERSION", "\"" + gitVersionName + "\""
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -92,10 +92,10 @@ android {
 
     flavorDimensions 'environment'
     productFlavors {
-        dev{
+        dev {
             dimension 'environment'
         }
-        prod{
+        prod {
             dimension 'environment'
         }
     }
@@ -107,10 +107,10 @@ android {
 dependencies {
     // Tests
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation ('com.android.support.test:runner:1.0.1') {
+    androidTestImplementation('com.android.support.test:runner:1.0.1') {
         exclude module: 'support-annotations'
     }
-    androidTestImplementation ('com.android.support.test.espresso:espresso-core:3.0.1') {
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.1') {
         exclude module: 'support-annotations'
     }
 
@@ -121,6 +121,7 @@ dependencies {
     //Support
     implementation "com.android.support:support-annotations:$supportLibraryVersion"
     implementation "com.android.support:support-v4:$supportLibraryVersion"
+    implementation "com.android.support:exifinterface:$supportLibraryVersion"
 
     //Logger
     implementation 'com.jakewharton.timber:timber:4.7.0'

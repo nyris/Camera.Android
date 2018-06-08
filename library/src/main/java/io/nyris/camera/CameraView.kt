@@ -1,11 +1,8 @@
 package io.nyris.camera
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.os.Build
 import android.util.AttributeSet
-import android.util.Log
-import java.util.ArrayList
 
 /**
  * CameraView.kt - Class view that extend BaseCameraView for targeting recognition based styleable parameters

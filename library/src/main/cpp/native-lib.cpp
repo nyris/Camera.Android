@@ -1,3 +1,6 @@
+/*Read me
+ * This file can't not be removed, it's required for builds */
+
 #include <jni.h>
 #include <string>
 

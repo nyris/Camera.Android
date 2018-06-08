@@ -9,6 +9,6 @@ import android.view.View
  * Created by nyris GmbH
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
-interface FocusMarkerTouchListener{
+interface FocusMarkerTouchListener {
     fun onTouched(v: View)
 }

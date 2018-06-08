@@ -1,7 +1,7 @@
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
 
-group='io.nyris'
+group = 'io.nyris'
 version = gitVersionName
 
 //TODO: to be removed when bintray fix the issue https://github.com/bintray/gradle-bintray-plugin/issues/199
@@ -79,7 +79,7 @@ uploadArchives {
             pom.groupId = POM_GROUP_ID
             pom.artifactId = POM_ARTIFACT_ID
 
-            pom.project{
+            pom.project {
                 inceptionYear '2018'
                 organization {
                     name 'nyris GmbH'
@@ -104,24 +104,24 @@ uploadArchives {
             pom.withXml {
                 Node pomNode = asNode()
                 pomNode.dependencies.'*'.findAll() {
-                    it.scope.text() == 'test'
+                    it.scope.text() == 'test' || it.artifactId.text() == 'ddk_kirin_lib'
                 }.each() {
                     it.parent().remove(it)
                 }
             }
 
             if (gitVersionName.contains("develop")) {
-                repository(url: System.getenv("NUGET_URL_DEVELOP")){
+                repository(url: System.getenv("NUGET_URL_DEVELOP")) {
                     authentication(userName: System.getenv("NUGET_USER"), password: System.getenv("NUGET_PASSWORD"))
                 }
             } else {
-                repository(url: System.getenv("NUGET_URL")){
+                repository(url: System.getenv("NUGET_URL")) {
                     authentication(userName: System.getenv("NUGET_USER"), password: System.getenv("NUGET_PASSWORD"))
                 }
             }
         }
     }
-    doLast{
+    doLast {
         println android.defaultPublishConfig
         println "\u001B[32mUploaded Camera version : $gitVersionName\u001B[0m"
     }

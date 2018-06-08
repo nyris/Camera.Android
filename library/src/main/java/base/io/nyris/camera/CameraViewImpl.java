@@ -75,9 +75,9 @@ abstract class CameraViewImpl {
 
     abstract boolean isCameraOpened();
 
-    abstract void setFacing(int facing);
-
     abstract int getFacing();
+
+    abstract void setFacing(int facing);
 
     abstract Set<AspectRatio> getSupportedAspectRatios();
 
@@ -85,50 +85,48 @@ abstract class CameraViewImpl {
 
     abstract AspectRatio getAspectRatio();
 
-    abstract void setAutoFocus(boolean autoFocus);
-
     abstract boolean getAutoFocus();
 
-    abstract void setFlash(int flash);
+    abstract void setAutoFocus(boolean autoFocus);
 
     abstract int getFlash();
+
+    abstract void setFlash(int flash);
 
     abstract void takePicture();
 
     abstract void setDisplayOrientation(int displayOrientation);
 
-    void addBarcodeListener(IBarcodeListener barcodeListener){
+    void addBarcodeListener(IBarcodeListener barcodeListener) {
     }
 
-    void enableBarcode(boolean isEnabled){
+    void enableBarcode(boolean isEnabled) {
     }
 
-    void enableInferenceStats(boolean enable){
+    void enableInferenceStats(boolean enable) {
     }
 
-    void renderInferenceStats(Canvas canvas){
+    void renderInferenceStats(Canvas canvas) {
     }
 
     Bitmap getPreviewBitmap(int cameraWidth, int cameraHeight) {
-        if(mPreview == null)
+        if (mPreview == null)
             return null;
         View preview = mPreview.getView();
         Bitmap screenShotPreviewBmp = null;
         try {
-            if(preview instanceof TextureView){
-                screenShotPreviewBmp = Bitmap.createBitmap(preview.getWidth(),preview.getHeight(),Bitmap.Config.ARGB_8888);
+            if (preview instanceof TextureView) {
+                screenShotPreviewBmp = Bitmap.createBitmap(preview.getWidth(), preview.getHeight(), Bitmap.Config.ARGB_8888);
                 TextureView textureView = (TextureView) preview;
                 screenShotPreviewBmp = textureView.getBitmap(screenShotPreviewBmp);
-            }
-            else {
+            } else {
                 SurfaceView surfaceView = (SurfaceView) preview;
                 screenShotPreviewBmp = Bitmap.createBitmap(preview.getWidth(), preview.getHeight(), Bitmap.Config.ARGB_8888);
                 Canvas c = new Canvas(screenShotPreviewBmp);
                 surfaceView.draw(c);
             }
-            screenShotPreviewBmp=Bitmap.createBitmap(screenShotPreviewBmp, 0,0,cameraWidth, cameraHeight);
-        }
-        catch (Exception e){
+            screenShotPreviewBmp = Bitmap.createBitmap(screenShotPreviewBmp, 0, 0, cameraWidth, cameraHeight);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return screenShotPreviewBmp;

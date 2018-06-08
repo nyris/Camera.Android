@@ -39,8 +39,6 @@ import android.util.SparseIntArray;
 import android.view.MotionEvent;
 import android.view.Surface;
 
-import org.jetbrains.annotations.Contract;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Set;
@@ -52,44 +50,64 @@ import timber.log.Timber;
 @TargetApi(21)
 class Camera2 extends CameraViewImpl {
 
-    private final String tag = Camera2.class.getName();
-
     private static final SparseIntArray INTERNAL_FACINGS = new SparseIntArray();
 
     static {
         INTERNAL_FACINGS.put(Constants.FACING_BACK, CameraCharacteristics.LENS_FACING_BACK);
         INTERNAL_FACINGS.put(Constants.FACING_FRONT, CameraCharacteristics.LENS_FACING_FRONT);
     }
+
+    private final String tag = Camera2.class.getName();
     private final CameraManager mCameraManager;
+    private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
+            = reader -> {
 
-    private final CameraDevice.StateCallback mCameraDeviceCallback
-            = new CameraDevice.StateCallback() {
+        try (Image image = reader.acquireNextImage()) {
+            Image.Plane[] planes = image.getPlanes();
+            if (planes.length > 0) {
+                ByteBuffer buffer = planes[0].getBuffer();
+                byte[] data = new byte[buffer.remaining()];
+                buffer.get(data);
+                mCallback.onPictureTaken(data);
+            }
+        }
+    };
+    private final SizeMap mPreviewSizes = new SizeMap();
+    private final SizeMap mPictureSizes = new SizeMap();
+    protected CameraDevice mCamera;
+    protected CameraCaptureSession mCaptureSession;
+    protected CaptureRequest.Builder mPreviewRequestBuilder;
+    protected ImageReader mImageReader;
+    protected int mFacing;
+    protected int sensorOrientation = 0;
+    private String mCameraId;
+    private CameraCharacteristics mCameraCharacteristics;
+    private AspectRatio mAspectRatio = Constants.DEFAULT_ASPECT_RATIO;
+    private boolean mAutoFocus;
+    private int mFlash;
+    private int mDisplayOrientation;
+    private PictureCaptureCallback mCaptureCallback = new PictureCaptureCallback() {
 
         @Override
-        public void onOpened(@NonNull CameraDevice camera) {
-            mCamera = camera;
-            mCallback.onCameraOpened();
-            startCaptureSession();
+        public void onPrecaptureRequired() {
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
+                    CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START);
+            setState(STATE_PRECAPTURE);
+            try {
+                mCaptureSession.capture(mPreviewRequestBuilder.build(), this, null);
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
+                        CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_IDLE);
+            } catch (CameraAccessException e) {
+                Timber.e(tag, "Failed to run precapture sequence.");
+            }
         }
 
         @Override
-        public void onClosed(@NonNull CameraDevice camera) {
-            mCallback.onCameraClosed();
-        }
-
-        @Override
-        public void onDisconnected(@NonNull CameraDevice camera) {
-            mCamera = null;
-        }
-
-        @Override
-        public void onError(@NonNull CameraDevice camera, int error) {
-            Timber.e(tag, "onError: " + camera.getId() + " (" + error + ")");
-            mCamera = null;
+        public void onReady() {
+            captureStillPicture();
         }
 
     };
-
     private final CameraCaptureSession.StateCallback mSessionCallback
             = new CameraCaptureSession.StateCallback() {
 
@@ -124,71 +142,33 @@ class Camera2 extends CameraViewImpl {
         }
 
     };
-
-    private PictureCaptureCallback mCaptureCallback = new PictureCaptureCallback() {
+    private final CameraDevice.StateCallback mCameraDeviceCallback
+            = new CameraDevice.StateCallback() {
 
         @Override
-        public void onPrecaptureRequired() {
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
-                    CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START);
-            setState(STATE_PRECAPTURE);
-            try {
-                mCaptureSession.capture(mPreviewRequestBuilder.build(), this, null);
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
-                        CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_IDLE);
-            } catch (CameraAccessException e) {
-                Timber.e(tag, "Failed to run precapture sequence.");
-            }
+        public void onOpened(@NonNull CameraDevice camera) {
+            mCamera = camera;
+            mCallback.onCameraOpened();
+            startCaptureSession();
         }
 
         @Override
-        public void onReady() {
-            captureStillPicture();
+        public void onClosed(@NonNull CameraDevice camera) {
+            mCallback.onCameraClosed();
+        }
+
+        @Override
+        public void onDisconnected(@NonNull CameraDevice camera) {
+            mCamera = null;
+        }
+
+        @Override
+        public void onError(@NonNull CameraDevice camera, int error) {
+            Timber.e(tag, "onError: " + camera.getId() + " (" + error + ")");
+            mCamera = null;
         }
 
     };
-
-    private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
-            = reader -> {
-
-        try (Image image = reader.acquireNextImage()) {
-            Image.Plane[] planes = image.getPlanes();
-            if (planes.length > 0) {
-                ByteBuffer buffer = planes[0].getBuffer();
-                byte[] data = new byte[buffer.remaining()];
-                buffer.get(data);
-                mCallback.onPictureTaken(data);
-            }
-        }
-    };
-
-    private String mCameraId;
-
-    private CameraCharacteristics mCameraCharacteristics;
-
-    protected CameraDevice mCamera;
-
-    protected CameraCaptureSession mCaptureSession;
-
-    protected CaptureRequest.Builder mPreviewRequestBuilder;
-
-    protected ImageReader mImageReader;
-
-    private final SizeMap mPreviewSizes = new SizeMap();
-
-    private final SizeMap mPictureSizes = new SizeMap();
-
-    protected int mFacing;
-
-    private AspectRatio mAspectRatio = Constants.DEFAULT_ASPECT_RATIO;
-
-    private boolean mAutoFocus;
-
-    private int mFlash;
-
-    private int mDisplayOrientation;
-
-    protected int sensorOrientation = 0;
 
     Camera2(Callback callback, PreviewImpl preview, Context context) {
         super(callback, preview);
@@ -225,13 +205,18 @@ class Camera2 extends CameraViewImpl {
 
     @Override
     protected void stopPreview() {
-        if(mCaptureSession!= null)
+        if (mCaptureSession != null)
             mCaptureSession.close();
     }
 
     @Override
     boolean isCameraOpened() {
         return mCamera != null;
+    }
+
+    @Override
+    int getFacing() {
+        return mFacing;
     }
 
     @Override
@@ -244,11 +229,6 @@ class Camera2 extends CameraViewImpl {
             stop();
             start();
         }
-    }
-
-    @Override
-    int getFacing() {
-        return mFacing;
     }
 
     @Override
@@ -278,6 +258,11 @@ class Camera2 extends CameraViewImpl {
     }
 
     @Override
+    boolean getAutoFocus() {
+        return mAutoFocus;
+    }
+
+    @Override
     void setAutoFocus(boolean autoFocus) {
         if (mAutoFocus == autoFocus) {
             return;
@@ -297,8 +282,8 @@ class Camera2 extends CameraViewImpl {
     }
 
     @Override
-    boolean getAutoFocus() {
-        return mAutoFocus;
+    int getFlash() {
+        return mFlash;
     }
 
     @Override
@@ -319,11 +304,6 @@ class Camera2 extends CameraViewImpl {
                 }
             }
         }
-    }
-
-    @Override
-    int getFlash() {
-        return mFlash;
     }
 
     @Override
@@ -351,8 +331,8 @@ class Camera2 extends CameraViewImpl {
             int internalFacing = INTERNAL_FACINGS.get(mFacing);
             final String[] ids = mCameraManager.getCameraIdList();
             if (ids.length == 0) { // No camera
-                mCallback.onError("No camera available.");
                 Timber.e(tag, "No camera available.");
+                mCallback.onError("No camera available.");
                 return false;
             }
             for (String id : ids) {
@@ -365,8 +345,8 @@ class Camera2 extends CameraViewImpl {
                 }
                 Integer internal = characteristics.get(CameraCharacteristics.LENS_FACING);
                 if (internal == null) {
-                    mCallback.onError("Unexpected state: LENS_FACING null");
                     Timber.e(tag, "Unexpected state: LENS_FACING null");
+                    mCallback.onError("Unexpected state: LENS_FACING null");
                     return false;
                 }
                 if (internal == internalFacing) {
@@ -386,8 +366,8 @@ class Camera2 extends CameraViewImpl {
             }
             Integer internal = mCameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
             if (internal == null) {
-                mCallback.onError("Unexpected state: LENS_FACING null");
                 Timber.e(tag, "Unexpected state: LENS_FACING null");
+                mCallback.onError("Unexpected state: LENS_FACING null");
                 return false;
             }
             for (int i = 0, count = INTERNAL_FACINGS.size(); i < count; i++) {
@@ -414,8 +394,8 @@ class Camera2 extends CameraViewImpl {
         StreamConfigurationMap map = mCameraCharacteristics.get(
                 CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         if (map == null) {
-            mCallback.onError("Failed to get configuration map: " + mCameraId);
             Timber.e(tag, "Failed to get configuration map: %d", mCameraId);
+            mCallback.onError("Failed to get configuration map: " + mCameraId);
             return;
         }
         sensorOrientation = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
@@ -464,8 +444,8 @@ class Camera2 extends CameraViewImpl {
         try {
             mCameraManager.openCamera(mCameraId, mCameraDeviceCallback, null);
         } catch (CameraAccessException e) {
-            mCallback.onError("Failed to open camera: " + mCameraId);
             Timber.e(e, tag, "Failed to open camera: ", mCameraId);
+            mCallback.onError("Failed to open camera: " + mCameraId);
         }
     }
 
@@ -487,8 +467,8 @@ class Camera2 extends CameraViewImpl {
             mCamera.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
                     mSessionCallback, null);
         } catch (CameraAccessException e) {
-            mCallback.onError("Failed to start camera session");
             Timber.e(e, tag, "Failed to open camera: ", mCameraId);
+            mCallback.onError("Failed to start camera session");
         }
     }
 
@@ -588,11 +568,11 @@ class Camera2 extends CameraViewImpl {
      * Locks the focus as the first step for a still image capture.
      */
     private void lockFocus() {
-        if(mPreviewRequestBuilder == null)
+        if (mPreviewRequestBuilder == null)
             return;
-        if(mCaptureCallback == null)
+        if (mCaptureCallback == null)
             return;
-        if(mCaptureSession == null)
+        if (mCaptureSession == null)
             return;
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                 CaptureRequest.CONTROL_AF_TRIGGER_START);
@@ -669,7 +649,7 @@ class Camera2 extends CameraViewImpl {
      * capturing a still picture.
      */
     private void unlockFocus() {
-        if(mPreviewRequestBuilder == null || mCaptureSession == null || mCaptureCallback == null)
+        if (mPreviewRequestBuilder == null || mCaptureSession == null || mCaptureCallback == null)
             return;
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                 CaptureRequest.CONTROL_AF_TRIGGER_CANCEL);
@@ -687,54 +667,43 @@ class Camera2 extends CameraViewImpl {
         }
     }
 
-
-
     @SuppressLint("ClickableViewAccessibility")
     private void attachFocusTapListener() {
         mPreview.getView().setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                if (mCamera != null) {
-                    Rect rect = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-                    if (rect == null) return true;
-                    int areaSize = getFocusAreaSize();
-                    int right = rect.right;
-                    int bottom = rect.bottom;
-                    int viewWidth = mPreview.getView().getWidth();
-                    int viewHeight = mPreview.getView().getHeight();
-                    int ll, rr;
-                    Rect newRect;
-                    int centerX = (int) event.getX();
-                    int centerY = (int) event.getY();
-                    ll = ((centerX * right) - areaSize) / viewWidth;
-                    rr = ((centerY * bottom) - areaSize) / viewHeight;
-                    int focusLeft = clamp(ll, 0, right);
-                    int focusBottom = clamp(rr, 0, bottom);
-                    newRect = new Rect(focusLeft, focusBottom, focusLeft + areaSize, focusBottom + areaSize);
-                    MeteringRectangle meteringRectangle = new MeteringRectangle(newRect, getFocusMeteringAreaWeight());
-                    MeteringRectangle[] meteringRectangleArr = {meteringRectangle};
+            if (event.getAction() != MotionEvent.ACTION_UP)
+                return false;
 
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, meteringRectangleArr);
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, meteringRectangleArr);
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, CameraMetadata.CONTROL_AE_PRECAPTURE_TRIGGER_START);
+            if (mCamera == null)
+                return false;
 
-                    updatePreview();
-                }
-            }
+            Rect rect = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+            if (rect == null) return true;
+            int areaSize = getFocusAreaSize();
+            int right = rect.right;
+            int bottom = rect.bottom;
+            int viewWidth = mPreview.getView().getWidth();
+            int viewHeight = mPreview.getView().getHeight();
+
+            Rect newRect;
+            int centerX = (int) event.getX();
+            int centerY = (int) event.getY();
+            int ll = ((centerX * right) - areaSize) / viewWidth;
+            int rr = ((centerY * bottom) - areaSize) / viewHeight;
+            int focusLeft = Math.min(right, Math.max(0, ll));
+            int focusBottom = Math.min(bottom, Math.max(0, rr));
+            newRect = new Rect(focusLeft, focusBottom, focusLeft + areaSize, focusBottom + areaSize);
+            MeteringRectangle meteringRectangle = new MeteringRectangle(newRect, getFocusMeteringAreaWeight());
+            MeteringRectangle[] meteringRectangleArr = {meteringRectangle};
+
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, meteringRectangleArr);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, meteringRectangleArr);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, CameraMetadata.CONTROL_AE_PRECAPTURE_TRIGGER_START);
+
+            updatePreview();
             return true;
         });
-    }
-
-    @Contract(pure = true)
-    private int clamp(int x, int min, int max) {
-        if (x < min) {
-            return min;
-        } else if (x > max) {
-            return max;
-        } else {
-            return x;
-        }
     }
 
     private void updatePreview() {

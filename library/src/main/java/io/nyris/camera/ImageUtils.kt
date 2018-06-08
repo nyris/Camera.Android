@@ -7,6 +7,8 @@ import android.graphics.Matrix
 import android.net.Uri
 import android.os.Environment
 import android.preference.PreferenceManager
+import android.provider.MediaStore
+import android.support.media.ExifInterface
 import java.io.ByteArrayOutputStream
 import java.io.File
 
@@ -17,7 +19,7 @@ import java.io.File
  * Created by nyris GmbH
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
-internal class ImageUtils{
+open class ImageUtils {
     companion object {
         init {
             try {
@@ -27,13 +29,13 @@ internal class ImageUtils{
             }
         }
 
-        fun rotateBitmap(image : ByteArray): ByteArray {
+        fun rotateBitmap(image: ByteArray): ByteArray {
             val bitmap = BitmapFactory.decodeByteArray(image, 0, image.size)
             val matrix = Matrix()
             matrix.setRotate(Exif.getOrientation(image))
             val bmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
             val stream = ByteArrayOutputStream()
-            bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            bmp.compress(Bitmap.CompressFormat.JPEG, 90, stream)
             return stream.toByteArray()
         }
 
@@ -51,17 +53,22 @@ internal class ImageUtils{
             bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
 
             // calculate the new image size preserving the aspect ratio
-            val originalHeight = bitmap.height
-            val originalWidth = bitmap.width
-            val proportionalScaleSize = calculateImageSizePreservingAspectRatio(context, Size(width, height), originalWidth, originalHeight)
+            val proportionalScaleSize = calculateImageSizePreservingAspectRatio(context, Size(width, height), bitmap.width, bitmap.height)
             val scaledImage = Bitmap.createScaledBitmap(bitmap, proportionalScaleSize.width, proportionalScaleSize.height, true)
 
             return compressAndTransformToBytes(scaledImage)
         }
 
+        fun resize(context: Context, bitmap: Bitmap, width: Int, height: Int): Bitmap {
+            val originalHeight = bitmap.height
+            val originalWidth = bitmap.width
+            val proportionalScaleSize = calculateImageSizePreservingAspectRatio(context, Size(width, height), originalWidth, originalHeight)
+            return Bitmap.createScaledBitmap(bitmap, proportionalScaleSize.width, proportionalScaleSize.height, true)
+        }
+
         fun compressAndTransformToBytes(scaledDownImage: Bitmap): ByteArray {
             val stream = ByteArrayOutputStream()
-            scaledDownImage.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            scaledDownImage.compress(Bitmap.CompressFormat.JPEG, 90, stream)
             return stream.toByteArray()
         }
 
@@ -102,11 +109,54 @@ internal class ImageUtils{
             return state == Environment.MEDIA_MOUNTED
         }
 
-        fun rotateBitmap(bitmap: Bitmap, rotation : Float) : Bitmap{
+        fun rotateBitmap(bitmap: Bitmap, rotation: Float): Bitmap {
             val matrix = Matrix()
             matrix.postRotate(rotation)
             val scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width, bitmap.height, true)
             return Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.width, scaledBitmap.height, matrix, true)
+        }
+
+        fun rotateImageFromUri(context: Context, imageUri: Uri): Bitmap? {
+            val exif = ExifInterface(context.contentResolver.openInputStream(imageUri))
+            val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+            var captureBmp: Bitmap? = MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri)
+            captureBmp = rotateBitmap(captureBmp, orientation)
+            return captureBmp
+        }
+
+        fun rotateBitmap(bitmap: Bitmap?, @ExifOrientation orientation: Int): Bitmap? {
+            if (bitmap == null)
+                return null
+            val matrix = Matrix()
+            when (orientation) {
+                ExifInterface.ORIENTATION_NORMAL -> return bitmap
+                ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.setScale(-1f, 1f)
+                ExifInterface.ORIENTATION_ROTATE_180 -> matrix.setRotate(180f)
+                ExifInterface.ORIENTATION_FLIP_VERTICAL -> {
+                    matrix.setRotate(180f)
+                    matrix.postScale(-1f, 1f)
+                }
+                ExifInterface.ORIENTATION_TRANSPOSE -> {
+                    matrix.setRotate(90f)
+                    matrix.postScale(-1f, 1f)
+                }
+                ExifInterface.ORIENTATION_ROTATE_90 -> matrix.setRotate(90f)
+                ExifInterface.ORIENTATION_TRANSVERSE -> {
+                    matrix.setRotate(-90f)
+                    matrix.postScale(-1f, 1f)
+                }
+                ExifInterface.ORIENTATION_ROTATE_270 -> matrix.setRotate(-90f)
+                else -> return bitmap
+            }
+
+            return try {
+                val bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                bitmap.recycle()
+                bmRotated
+            } catch (e: OutOfMemoryError) {
+                e.printStackTrace()
+                null
+            }
         }
 
         /**
@@ -124,7 +174,7 @@ internal class ImageUtils{
          * @param output A pre-allocated array for the ARGB 8:8:8:8 output data.
          */
         @JvmStatic
-        external fun stringFromJNI() : String
+        external fun stringFromJNI(): String
 
         @JvmStatic
         external fun convertYUV420ToARGB8888(

@@ -13,7 +13,7 @@ import java.io.FileOutputStream
  * Created by nyris GmbH
  * Copyright © 2018 nyris GmbH. All rights reserved.
  */
-internal class SavingImageTask(context : Context, var mImage: ByteArray) : AsyncTask<Void, Void, Void>() {
+internal class SavingImageTask(context: Context, var mImage: ByteArray) : AsyncTask<Void, Void, Void>() {
     private var mSavedImageUri: Uri? = ImageUtils.getPhotoFileUri(context, "photo.jpg")
 
     override fun doInBackground(vararg voids: Void): Void? {

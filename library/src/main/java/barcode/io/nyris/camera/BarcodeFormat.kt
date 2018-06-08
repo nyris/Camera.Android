@@ -2,7 +2,7 @@ package io.nyris.camera
 
 import net.sourceforge.zbar.Symbol
 import java.io.Serializable
-import java.util.ArrayList
+import java.util.*
 
 /**
  * BarcodeFormat.kt - Class that contain barcode format

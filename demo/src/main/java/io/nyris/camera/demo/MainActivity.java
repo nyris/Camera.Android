@@ -41,11 +41,9 @@ import java.util.Objects;
 import java.util.Set;
 
 import io.nyris.camera.AspectRatio;
-import io.nyris.camera.Barcode;
 import io.nyris.camera.BaseCameraView;
 import io.nyris.camera.Callback;
 import io.nyris.camera.CameraView;
-import io.nyris.camera.IBarcodeListener;
 
 
 /**
@@ -199,7 +197,8 @@ public class MainActivity extends AppCompatActivity implements
                     mCameraView.stop();
                     mCameraView.enableBarcode(true);
                     mCameraView.addBarcodeListener(barcode -> {
-                        runOnUiThread(()-> Toast.makeText(MainActivity.this,"Barcode :" +barcode.getContents(), Toast.LENGTH_SHORT).show());
+                        runOnUiThread(()-> Toast.makeText(MainActivity.this,"Barcode :" +
+                                barcode.getContents(), Toast.LENGTH_SHORT).show());
                     });
                     mCameraView.start();
                 }

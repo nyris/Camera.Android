@@ -15,7 +15,7 @@ import android.hardware.camera2.params.StreamConfigurationMap
  */
 
 @TargetApi(23)
-internal class Camera2ZBarApi23(callback : Callback?, preview : PreviewImpl, context : Context) : Camera2ZBar(callback, preview, context){
+internal class Camera2ZBarApi23(callback: Callback?, preview: PreviewImpl, context: Context) : Camera2ZBar(callback, preview, context) {
     override fun collectPictureSizes(sizes: SizeMap, map: StreamConfigurationMap) {
         // Try to get hi-res output sizes
         val outputSizes = map.getHighResolutionOutputSizes(ImageFormat.JPEG)

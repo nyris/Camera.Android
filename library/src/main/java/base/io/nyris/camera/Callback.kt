@@ -40,9 +40,9 @@ interface Callback {
     fun onPictureTakenOriginal(cameraView: BaseCameraView, original: ByteArray)
 
     /**
-     * Called when a picture is taken.
+     * Called when there are an error with camera api
      *
-     * @param errorMessage    Error message.
+     * @param errorMessage Error message.
      */
     fun onError(errorMessage: String)
 }

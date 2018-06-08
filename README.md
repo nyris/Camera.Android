@@ -1,7 +1,6 @@
 # nyris Camera View for Android
-==========
 
-Forked from [this](https://github.com/google/cameraview) repo.
+This project is a from of the [google/cameraview](https://github.com/google/cameraview) repo.
 
 ![](nyris_logo.png)
 
@@ -10,12 +9,12 @@ Introduction
 nyris is a high performance visual product search, object detection and visual recommendations engine
 for retail and industry.
 
-For more information please see [nyris.io](https://nyris.io/)
+For more information please see [nyris.io](https://nyris.io/).
 
-We provide a new Camera library that that full image requirements for our matching engine.
+We provide a new Camera library that handles all image requirements for our matching engine.
 The SDK is written in [Kotlin](https://kotlinlang.org/) and [Java](https://docs.oracle.com/javase/8/docs/technotes/guides/language/index.html).
 
-Requires API Level 14. The library uses Camera 1 API on API Level 14-20 and Camera2 on 21 and above.
+It requires API Level 14. The library uses Camera 1 API on API Level 14-20 and Camera2 on 21 and above.
 
 | API Level | Camera API | Preview View |
 |:---------:|------------|--------------|
