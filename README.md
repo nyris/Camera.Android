@@ -1,5 +1,5 @@
 # nyris Camera View for Android
-[![Build Status](https://travis-ci.com/nyris/Camera.Android.svg?branch=master)](https://travis-ci.com/nyris/Camera.Android)
+[![Build Status](https://travis-ci.org/nyris/Camera.Android.svg?branch=master)](https://travis-ci.org/nyris/Camera.Android)
 [![Download](https://api.bintray.com/packages/nyris/maven/Camera.Android/images/download.svg) ](https://bintray.com/nyris/maven/Camera.Android/_latestVersion)
 [![Download](https://api.bintray.com/packages/nyris/maven/ZBar.JNI/images/download.svg) ](https://bintray.com/nyris/maven/ZBar.JNI/_latestVersion)
 
