@@ -43,7 +43,7 @@ install {
         pom.withXml {
             Node pomNode = asNode()
             pomNode.dependencies.'*'.findAll() {
-                it.scope.text() == 'test'
+                it.scope.text() == 'test' || it.artifactId.text() == 'ddk_kirin_lib'
             }.each() {
                 it.parent().remove(it)
             }
@@ -104,6 +104,7 @@ uploadArchives {
             pom.withXml {
                 Node pomNode = asNode()
                 pomNode.dependencies.'*'.findAll() {
+                    print("artifactId : "+it.artifactId.text())
                     it.scope.text() == 'test' || it.artifactId.text() == 'ddk_kirin_lib'
                 }.each() {
                     it.parent().remove(it)
