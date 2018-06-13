@@ -47,6 +47,7 @@ Publish Libs To Bintray:
   stage: publish
   script:
     - export SDK_DEFAULT_PUBLISH_CONFIG=""
+    - export USE_DEV=""
     - ./gradlew :library:bintrayUpload --stacktrace
   tags:
     - android
