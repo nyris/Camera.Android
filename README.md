@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.nyris:camera:1.x.x'
+    implementation 'io.nyris:camera:1.x.x' //Replace x.x by the recent version or older version
     implementation 'io.nyris:zbarjni:0.10' //Required only if you use barcode mode
     implementation "android.arch.lifecycle:extensions:1.x.x" //Optional
 }
