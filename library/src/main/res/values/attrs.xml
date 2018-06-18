@@ -67,6 +67,8 @@
             <enum name="none" value="0" />
             <!-- Enabled barcode mode. -->
             <enum name="barcode" value="1" />
+            <!-- Enabled Image mode. -->
+            <enum name="image" value="2" />
         </attr>
     </declare-styleable>
 </resources>
