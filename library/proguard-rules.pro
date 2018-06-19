@@ -50,8 +50,10 @@
     java.lang.Object readResolve();
 }
 
--dontwarn io.nyris.camera.**
 
+-keepclassmembers class io.nyris.camera.ObjectTracker { *; }
+
+-dontwarn io.nyris.camera.**
 -keepclassmembers class net.sourceforge.zbar.ImageScanner { *; }
 -keepclassmembers class net.sourceforge.zbar.Image { *; }
 -keepclassmembers class net.sourceforge.zbar.Symbol { *; }
