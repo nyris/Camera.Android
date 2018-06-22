@@ -22,6 +22,11 @@ class CameraView : BaseCameraView {
             return
         }
 
+        // Attributes
+        val a = context.obtainStyledAttributes(attrs, R.styleable.CameraView, defStyleAttr,
+                R.style.Widget_CameraView)
+        typeRecognition = a.getInt(R.styleable.CameraView_recognition, 0)
+
         mCallbacks = CallbackBridge()
 
         // Internal setup
@@ -31,11 +36,6 @@ class CameraView : BaseCameraView {
             Build.VERSION.SDK_INT < 23 -> cameraAbove21Low23(typeRecognition, preview, context)
             else -> cameraAbove23(typeRecognition, preview, context)
         }
-
-        // Attributes
-        val a = context.obtainStyledAttributes(attrs, R.styleable.CameraView, defStyleAttr,
-                R.style.Widget_CameraView)
-        typeRecognition = a.getInt(R.styleable.CameraView_recognition, 0)
 
         mAdjustViewBounds = a.getBoolean(R.styleable.CameraView_android_adjustViewBounds, false)
         facing = a.getInt(R.styleable.CameraView_facing, FACING_BACK)
