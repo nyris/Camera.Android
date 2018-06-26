@@ -479,7 +479,7 @@ public class BaseCameraView extends FrameLayout implements LifecycleObserver {
      */
     public void enableBarcode(boolean isEnabled) {
         if (!(mImpl instanceof IBarcodeCamera)) {
-            final PreviewImpl preview = createPreviewImpl(getContext(), isEnabled);
+            final PreviewImpl preview = createPreviewImpl(getContext(), false);
             CameraViewImpl cameraViewImpl;
 
             if (Build.VERSION.SDK_INT < 21) {
