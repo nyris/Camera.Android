@@ -43,7 +43,7 @@ Add the dependencies
 ```groovy
 repositories {
     maven {
-        url  "https://dl.bintray.com/nyris/maven"
+        url  "https://maven.nyris.io/maven2/maven/"
     }
 }
 
